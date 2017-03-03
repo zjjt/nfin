@@ -1,0 +1,40 @@
+{
+  "name": "NFIN",
+  "version": "1.0.0",
+  "description": "une simple application pour gerer le portefeuille des titres(actions/obligations)pour le compte de Nsia Vie Assurances",
+  "author": "ZJJT",
+  "private": true,
+  "scripts": {
+    "start": "meteor run"
+  },
+  "dependencies": {
+    "apollo-client": "^0.10.1",
+    "apollo-server": "^0.3.3",
+    "babel-runtime": "^6.20.0",
+    "graphql": "^0.9.1",
+    "graphql-server-express": "^0.6.0",
+    "graphql-tag": "^1.3.1",
+    "graphql-tools": "^0.10.1",
+    "http-proxy-middleware": "^0.17.4",
+    "json2xls": "^0.1.2",
+    "material-ui": "^0.17.0",
+    "meteor-node-stubs": "~0.2.4",
+    "react": "^15.4.2",
+    "react-addons-css-transition-group": "^15.4.2",
+    "react-addons-pure-render-mixin": "^15.4.2",
+    "react-apollo": "^0.13.2",
+    "react-dom": "^15.4.2",
+    "react-mounter": "^1.2.0",
+    "react-redux": "^5.0.3",
+    "react-tap-event-plugin": "^2.0.1",
+    "react-tooltip": "^3.2.7",
+    "redux": "^3.6.0",
+    "redux-form": "^6.5.0",
+    "redux-form-material-ui": "^4.1.2",
+    "redux-logger": "^2.8.2",
+    "sequelize": "^3.30.2",
+    "sequelize-auto": "^0.4.21",
+    "sqlite": "^2.3.0",
+    "tedious": "^1.14.0"
+  }
+}
