@@ -1,7 +1,12 @@
 import Sequelize from 'sequelize';
 import {Meteor} from 'meteor/meteor';
 
-/*
+/*const DBSQLITE=new Sequelize('nsiafinanceLOCAL','','',{
+  host:'localhost',
+  dialect:'sqlite',
+  storage:'./NFINDB.sqlite'
+});*/
+
 const DBSQLSERVER= new Sequelize(Meteor.settings.DBSQLSERVER_DATABASE,Meteor.settings.DBSQLSERVER_USER, Meteor.settings.DBSQLSERVER_PASSWORD, {
     host:Meteor.settings.DBSQLSERVER_HOST,
     port:57055,//Meteor.settings.DBSQLSERVER_PORT,
@@ -12,4 +17,6 @@ const DBSQLSERVER= new Sequelize(Meteor.settings.DBSQLSERVER_DATABASE,Meteor.set
     //storage: './DB/moduleRGT.db',
 });
 
-*/
+
+
+export {DBSQLSERVER,DBSQLITE};
