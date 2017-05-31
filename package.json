@@ -1,7 +1,7 @@
 {
   "name": "NFIN",
   "version": "0.1.0",
-  "description": "une simple application pour gerer le portefeuille des titres(actions/obligations)pour le compte de Nsia Vie Assurances",
+  "description": "une application pour gerer le portefeuille des titres(actions/obligations)pour le compte de Nsia Vie Assurances",
   "author": "ZJJT",
   "private": true,
   "scripts": {

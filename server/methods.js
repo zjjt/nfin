@@ -5,14 +5,18 @@ import {DBSQLITE,DBSQLSERVER} from '../imports/api/graphql/connectors.js';
 import {moment} from 'meteor/momentjs:moment';
 import Excel from 'exceljs';
 import LineByLineReader from 'line-by-line';
-import {TempReleve,SGI,ComptesFinanciers} from '../imports/api/collections.js';
+import {TempReleve,SGI,ComptesFinanciers,FichiersInv,Inventaire} from '../imports/api/collections.js';
 import Future from 'fibers/future';
+import {transformInFrenchDate} from '../imports/utils/utils.js'
+//import {Baby} from 'meteor/modweb:baby-parse';
+import Baby from 'babyparse';
+import {check} from 'meteor/check';
 import _ from 'lodash';
 const R= require('ramda');
 
 const json2xls=require('json2xls');
 //const Excel=require('exceljs');
-let xlfile=process.env.PWD+'/relevers/releveOp.xls';
+let xlfile=process.env.PWD+'/FICHIERS/relevers/releveOp.xls';
 const COMPTES=ComptesFinanciers.find().fetch();
 
 
@@ -90,10 +94,12 @@ export default ()=>{
              
             
         },
+
+//-----------DECOUPAGE METHOD-------------------------->
         decoupExcel(){
             console.log('debut de la function');
             let fut=new Future();
-            //ici pour l'instant cette methode lirera le fichier et renverra un objet avec les numero de ligne(index) et les infos par ligne
+            //ici pour l'instant cette methode lira le fichier et renverra un objet avec les numero de ligne(index) et les infos par ligne
            
             //let myFutureRes=new Future();
 
@@ -269,6 +275,7 @@ export default ()=>{
             }));
          return fut.wait();
         },
+//-----------------COMPTABILISATION METHOD------------------------------->
         comptabilisation(rel){
             //console.dir(COMPTES);
             if(rel.length<-1){
@@ -298,13 +305,33 @@ export default ()=>{
                             temp.libelleS="Acquisiton de "+e.QUANTITE+" actions "+e.SYMBOLE,
                             temp.montant=e.MONTANT_TOTAL;
                             temp.symbole=e.SYMBOLE;
-                            temp.ref=parseInt(e.REFERENCE,10);
+                            temp.ref=parseInt(e.REFERENCE);
                             temp.ou="D";
                             temp.qte=e.QUANTITE;
                             temp.typeOp="AAC";
                             temp.indexOP=i;
-                           
-                         
+                           //FIFO on verifie que cette ligne n'existe pas deja dans l'inventaire si elle existe on skip
+                           let dateAchatFormatted=transformInFrenchDate(e.DATE_ACHAT_DES_TITRES);
+
+                           console.log("===== Date Achat en francais "+dateAchatFormatted);
+                           let existInFIFO=Inventaire.findOne({DateAcquisition:dateAchatFormatted,reference:temp.ref,Symbole:e.SYMBOLE,PrixUnitaire:e.PRIX_UNITAIRE,Quantite:e.QUANTITE});
+                           if(!existInFIFO){
+                              
+                               
+                               let valbilan=parseInt(e.QUANTITE)*parseInt(e.PRIX_UNITAIRE);
+                               Inventaire.insert({
+                                DateAcquisition:dateAchatFormatted,
+                                Valeur:e.SYMBOLE,
+                                Quantite:e.QUANTITE,
+                                PrixUnitaire:e.PRIX_UNITAIRE,
+                                ValBilan:valbilan,
+                                SGI:'NSIAFINANCE',
+                                Symbole:e.SYMBOLE,
+                                reference:temp.ref,
+                                type:"ACTIONS"
+
+                               });
+                           }
                         }
                         else if((codop.indexOf('T102')!==-1||codop.indexOf('T103')!==-1||codop.indexOf('T104')!==-1||codop.indexOf('T105')!==-1) && codop.substring(0,1)=="T"){
                             console.log("frais achat d'action");
@@ -448,86 +475,7 @@ export default ()=>{
                             tempArrC.push(bankobj);
                          }
                 });
-                //prendre toutes les references des operations presentes dans le relever
-                /**let refArray=[];
-                tempArrD.forEach((e)=>(refArray.push(e.ref)));
-                 console.log("====dans la gestion des credit=====================================================>");
-                 console.log("refArray");
-                 //console.dir(refArray);
-                 
-                //pour chak reference on filre et on recupere dans un tableau les elements correspondant a la reference
-                refArray.forEach((e)=>{
-                    let newarr=tempArr.filter((o)=>(o.ref==e));
-                    let bankobj={};
-                    let bankarr=[];
-                   
-                    for(let i=0;i<newarr.length;i++){
-                         //pour l'Achat d'action on gere la bank ici
-                        if(newarr[i].typeOp==="AAC"||newarr[i].typeOp==="FRAAC"){
-                            let compte=COMPTES.filter((obj)=>{
-                                    return obj.type==="BANK"
-                                });
-                                compte=compte[0];
-                            bankobj={
-                                compte:compte,
-                                libelle:newarr[i].libelle,
-                                libelleS:newarr[i].libelleS,
-                                montant:newarr[i].montant,
-                                symbole:newarr[i].symbole,
-                                ref:newarr[i].ref,
-                                ou:'C',
-                                typeOp:newarr[i].typeOp,
-                                indexOp:newarr[i].indexOp
-                            };
-                            bankarr.push(bankobj);
-                         }
-                         //cession d4actions et gestion des plus-moins value
-                         if(newarr[i].typeOp==="VAC"){
-                             /**Ici on doit pouvoir determiner dans linventaire si on a une plus value ou moins value 
-                            let compte=COMPTES.filter((obj)=>{
-                                    return obj.type==="AC"
-                                });
-                                compte=compte[0];
-                            bankobj={
-                                compte:compte,
-                                libelle:newarr[i].libelle,
-                                libelleS:newarr[i].libelleS,
-                                montant:newarr[i].montant,
-                                symbole:newarr[i].symbole,
-                                ref:newarr[i].ref,
-                                ou:'C',
-                                qte:newarr[i].qte,
-                                typeOp:newarr[i].typeOp,
-                                indexOp:newarr[i].indexOp
-                            };
-                            bankarr.push(bankobj);
-                         }else if(newarr[i].typeOp==="FRVAC"){
-                             let compte=COMPTES.filter((obj)=>{
-                                    return obj.type==="BANK"
-                                });
-                                compte=compte[0];
-                            bankobj={
-                                compte:compte,
-                                libelle:newarr[i].libelle,
-                                libelleS:newarr[i].libelleS,
-                                montant:newarr[i].montant,
-                                symbole:newarr[i].symbole,
-                                ref:newarr[i].ref,
-                                ou:'C',
-                                qte:newarr[i].qte,
-                                typeOp:newarr[i].typeOp,
-                                indexOp:newarr[i].indexOp
-                            };
-                            bankarr.push(bankobj);
-                         }
-                    }
-                    console.log('====newArr=======================================>');
-                    //console.dir(newarr);
-                    console.log('====newArr=======================================>');
-                   let finalArray=newarr.concat(bankarr);
-                  
-                   compta=(finalArray);
-                }); */
+           
                 console.log("====comptabilisation finale=====================================================>");
                 //console.dir(compta);
                 let refArray=[];
@@ -557,15 +505,75 @@ export default ()=>{
                 }
                 //la on filtre les doublons dans le tableau final en utilisant une fonction de lodash ou underscore
                 let dEnd=_.uniq(final,(v)=>{
-                    return v.compte && v.libelle && v.libelleS && v.montant && v.symbole && v.ref && v.ou && v.qte && v.typeOp && v.indexOp;
+                    return v.compte.compte && v.compte.libelle && v.compte.type && v.libelle && v.libelleS && v.montant && v.symbole && v.ref && v.ou && v.qte && v.typeOp && v.indexOp;
                 });
-                console.dir(dEnd);
-                return dEnd;
+                const groupByLibel=R.compose(
+					R.forEach((v)=>{
+						//alert(R);j
+							return v;		
+					}),
+					R.values,
+					R.groupBy(R.compose(
+							R.join(''),
+							R.reject(R.isNil),
+							R.props(['ref','libelle'])
+						))
+				);
+                let properOps=groupByLibel(dEnd);
+				let finaly=[];
+				properOps.forEach((e)=>{
+					e.forEach((v)=>{
+						finaly.push(v);
+					})
+					
+				});
+                //console.dir(finaly);
+                return finaly;
             }
+        },
+        mapInventory(){
+            const pathToFile=process.env.PWD+'/FICHIERS/inventaire/inventory.csv';
+            console.log(pathToFile);
+            console.dir(Baby);
+            
+            let parsed=Baby.parseFiles(pathToFile,{
+                header:true,
+                complete(results,file){
+                   // console.dir(results.data);
+                    check(results.data,Array);
+                    for(let i=0;i<results.data.length;i++){
+                        console.dir(results.data[i]);
+                        Inventaire.insert({
+                            DateAcquisition:results.data[i].DATE,
+                            Valeur:results.data[i].VALEURS,
+                            Quantite:parseInt(results.data[i].Qtites,10),
+                            PrixUnitaire:parseInt(results.data[i].Nominal,10),
+                            ValBilan:parseInt(results.data[i].Qtites,10)*parseInt(results.data[i].Nominal,10),
+                            SGI:results.data[i].SGI,
+                            Symbole:results.data[i].SYMBOL,
+                            reference:parseInt(results.data[i].Reference,10),
+                            type:results.data[i].TYPE_VALEUR
+                        });
+                    }
+                }
+            });
+        },
+         dropInventory(){
+             
+           Inventaire.remove({},(e,r)=>{
+            if(e){
+                throw new Meteor.Error("Une erreur s'est produite lors de la vidange de l'inventaire");
+            }else if(r){
+                return true;
+            }
+           });
+        },
+        getInventoryCount(){
+            return Inventaire.find({}).count();
         },
         defaultSGI(){
             let SGIS={
-                nom:['HUDSON','NSIA FINANCE']
+                nom:['HUDSON','NSIAFINANCE']
             };
             SGIS.forEach((e)=>{
                 SGI.upsert({

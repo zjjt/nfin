@@ -1,5 +1,5 @@
 import './routes';
-import '../../api/collections.js';
+import {Inventaire} from '../../api/collections.js';
 import {meteor} from 'meteor/meteor'
 
 Meteor.startup(()=>{
@@ -17,6 +17,6 @@ Meteor.startup(()=>{
         s.parentNode.insertBefore(wf,s);
         console.log("async font loaded",WebFontConfig);
     })();
-   
+  
 });
 

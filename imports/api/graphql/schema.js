@@ -9,8 +9,20 @@ const schema=`
         role:String
         createdAt:String
     }
+    type InvItem{
+        DateAcquisition:String
+        Valeur:String
+        Quantite:Int
+        PrixUnitaire:Int
+        ValBilan:Int
+        SGI:String
+        Symbole:String
+        reference:Int
+        type:String
+    }
     type Query{
         user(username:String):[User]
+        inventaire(type:String!,search:String,offset:Int,limit:Int):[InvItem]
     }
     type Mutation{
             deleteUsers(usercodes:[String]!):[User]

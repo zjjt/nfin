@@ -9,7 +9,8 @@ import {Field,reduxForm,formValueSelector} from 'redux-form';
 import Dialog from 'material-ui/Dialog';
 import {FilesCollection} from 'meteor/ostrio:files';
 import FlatButton from 'material-ui/FlatButton';
-import {Meteor} from 'meteor/meteor'
+import {Meteor} from 'meteor/meteor';
+
 //import {Fichiers} from '../../api/collections';
 import {Table, TableBody, TableFooter, TableHeader, TableHeaderColumn, TableRow, TableRowColumn} from 'material-ui/Table';
 
@@ -129,5 +130,6 @@ componentDidMount(){
        
     }
 }
+
 
 export default RelevTable;

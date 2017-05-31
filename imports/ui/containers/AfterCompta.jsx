@@ -14,6 +14,7 @@ import Divider from 'material-ui/Divider';
 import {Tabs, Tab} from 'material-ui/Tabs';
 import FontIcon from 'material-ui/FontIcon';
 import AfterComptaTable from '../components/AfterComptaTable.jsx';
+import AfterComptaInv from '../components/AfterComptaInv.jsx';
 import {moment} from 'meteor/momentjs:moment';
 import { createContainer } from 'meteor/react-meteor-data';
 import AppBar from 'material-ui/AppBar';
@@ -49,7 +50,7 @@ class AfterCompta extends Component {
      }
 
     render(){
-       const {opCompta,isFull}=this.props;
+       const {opCompta,isFull,fifoSnap}=this.props;
         return(
             <div className="centeredContentSingle">
                 <div className="contentWrapper fadeInUp animated">
@@ -90,7 +91,7 @@ class AfterCompta extends Component {
                             <div className="VerticalSeparator"></div>
                             <div className="window">
                                 <AppBar
-                                    title="Historique de comptabilisation"
+                                    title="Inventaire après comptabilisation"
                                     style={{backgroundColor: '#212f68'}}
                                     iconClassNameLeft="none"
                                     className="animAppBar2"
@@ -98,7 +99,7 @@ class AfterCompta extends Component {
                                         textAlign:'center'
                                     }}
                                 />
-                                
+                                <AfterComptaInv fifoSnap={fifoSnap?fifoSnap:null} type="ALL"/>
                             </div>
                             
                         </div>
@@ -115,6 +116,7 @@ AfterCompta=connect(
     (state,dispatch )=> {
 
     return {
+     fifoSnap:state.inventaire.inventaireSnap,
       opCompta:state.releveDuJour.isFull?state.releveDuJour.resultatComptaFull:state.releveDuJour.resultatComptaSimple,
       isFull:state.releveDuJour.isFull,
       dispatch

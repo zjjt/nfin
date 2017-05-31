@@ -11,8 +11,9 @@ import Dialog from 'material-ui/Dialog';
 import {FilesCollection} from 'meteor/ostrio:files';
 import FlatButton from 'material-ui/FlatButton';
 import {Meteor} from 'meteor/meteor'
-import {Fichiers} from '../../api/collections';
+import {FichiersOP} from '../../api/collections';
 import {decoupagedone,releverOk} from '../../redux/actions/relever-actions';
+import {snapInvent} from '../../redux/actions/inventaire-actions';
 import RelevTable from './RelevTable.jsx';
 import {$} from 'meteor/jquery';
 
@@ -64,6 +65,7 @@ const styles={
        const {dispatch}=this.props;
        if(this.state.decoupage.length>=1 && !this.state.alreadyOp){
             dispatch(decoupagedone(this.state.decoupage));
+            dispatch(snapInvent());
             this.setState({
                 dialogTIsOpen:true,
                 alreadyOp:true
@@ -188,7 +190,7 @@ const styles={
                     onChange={(e)=>{
                         if(e.currentTarget.files && e.currentTarget.files[0]){
                             let file=e.currentTarget.files[0];
-                            let upload=Fichiers.insert({
+                            let upload=FichiersOP.insert({
                                 file:file,
                                 fileName:'operations.xls',
                                 streams:'dynamic',
@@ -248,7 +250,7 @@ const styles={
                             <div style={{height:'10px'}}></div>
                             <div>
                                 {this.state.currentFile&&this.state.progress<=99?(<CircularProgress size={60} thickness={7}/>):this.state.progress!==100?(<span>Le fichier doit être au format xls et ne doit pas exéder 10MB</span>):null}
-                                {this.state.progress===100?(<span style={{color:'green',textAlign:'center'}}>Fichier Téléchargé<br/>Veuillez patienter pendant le découpage</span>):null}
+                                {this.state.progress===100?(<span style={{color:'green',textAlign:'center'}}>Fichier Téléchargé<br/>Veuillez patienter pendant le découpage<marquee>...</marquee></span>):null}
                             </div>
                         
                     </div>

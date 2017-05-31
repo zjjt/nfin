@@ -1,10 +1,10 @@
 
 import {Meteor} from 'meteor/meteor';
-import {Fichiers} from '../../imports/api/collections.js';
+import {FichiersOP} from '../../imports/api/collections.js';
 
-export default()=>{
+export default FichiersOPPub=()=>{
     Meteor.publish('fichierCollection',function(){
-        return Fichiers.find().cursor;
+        return FichiersOP.find().cursor;
        
     });
 }

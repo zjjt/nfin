@@ -4,6 +4,7 @@ import {mount} from 'react-mounter';
 import React from 'react';
 import store from '../../redux/store.js'
 import Uploader from '../../ui/containers/Uploader.jsx';
+import InventUploader from '../../ui/containers/InventUploader.jsx';
 import Dashboard from '../../ui/containers/Dashboard.jsx';
 import MainLayout from '../../ui/Layouts/MainLayout/MainLayout.jsx';
 import Login from '../../ui/containers/Login.jsx';
@@ -12,7 +13,9 @@ import AfterCompta from '../../ui/containers/AfterCompta.jsx';
 import AdminDashboard from '../../ui/containers/AdminDashboard.jsx';
 import CreateUser from '../../ui/containers/CreateUser.jsx';
 import AdminUserList from '../../ui/containers/AdminUserList.jsx';
+import Wallet from '../../ui/containers/Wallet.jsx';
 import injectTapEventPlugin from 'react-tap-event-plugin';
+import {FichiersInv,Inventaire} from '../../api/collections.js';
 import {Session} from 'meteor/session';
 
 injectTapEventPlugin();
@@ -58,13 +61,39 @@ FlowRouter.route('/dashboard/wallet/actions/',{
 FlowRouter.route('/dashboard/wallet/',{
 	name:'wallet',
 	triggersEnter:[(context,redirect)=>{
-		if(!Meteor.user()){
-			redirect('/');
+		//Check if collection inventaire isnt empty
+		let res=Inventaire.find().count();
+		if(!res){
+			if(!Meteor.user()){
+					redirect('/');
+				}else if(Meteor.user()){
+					redirect('/dashboard/insert-wallet/');
+				}
 		}
+		
 	}],
 	action(){
 		mount(MainLayout,
 			{content:()=><Wallet/>})
+	}
+});
+
+FlowRouter.route('/dashboard/insert-wallet/',{
+	name:'insertwallet',
+	triggersEnter:[(context,redirect)=>{
+		//Check if collection inventaire isnt empty
+		let res=Inventaire.find().count();
+		if(res){
+				if(!Meteor.user()){
+					redirect('/');
+				}else if(Meteor.user()){
+					redirect('/dashboard/wallet/');
+				}
+			}	
+	}],
+	action(){
+		mount(MainLayout,
+			{content:()=><InventUploader/>})
 	}
 });
 FlowRouter.route('/dashboard/wallet/obligations/',{

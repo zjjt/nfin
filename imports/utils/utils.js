@@ -5,3 +5,13 @@ Array.prototype.sum=(prop)=>{
     }
     return total;
 };
+
+let transformInFrenchDate=(e)=>{
+    let day=e.substring(6);
+    let mois=e.substring(4,6);
+    let year=e.substring(0,4);
+    let date=`${day}/${mois}/${year}`;
+    return date;
+};
+
+export {transformInFrenchDate};

@@ -2,6 +2,7 @@ import {combineReducers} from 'redux';
 import {reducer as formReducer} from 'redux-form';
 import adminReducer from './reducers/admin-reducer';
 import userReducer from './reducers/user-reducer';
+import inventaireReducer from './reducers/inventaire-reducer.js';
 import releveReducer from './reducers/relever-reducer';
 import ApolloClient ,{createNetworkInterface} from 'apollo-client';
 
@@ -20,7 +21,8 @@ const reducers={
 	form:formReducer,
 	administrateurAction:adminReducer,
 	userActions:userReducer,
-	releveDuJour:releveReducer
+	releveDuJour:releveReducer,
+	inventaire:inventaireReducer
 };
 const rootReducer=combineReducers(reducers);
 export {client,rootReducer};

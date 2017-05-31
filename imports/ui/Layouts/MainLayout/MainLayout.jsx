@@ -118,9 +118,10 @@ export default class MainLayout extends Component{
 									this.handleClose();
 								}}>Gestion du portefeuille</MenuItem>
 							
-							<MenuItem onTouchTap={()=>{FlowRouter.go('fullwallet')}}>Inventaire total</MenuItem>
-							<MenuItem onTouchTap={()=>{FlowRouter.go('actions')}}>Inventaire des Actions</MenuItem>
-							<MenuItem onTouchTap={()=>{FlowRouter.go('obligations')}}>Inventaire des Obligations</MenuItem>
+							<MenuItem onTouchTap={()=>{FlowRouter.go('wallet')}}>Inventaire total</MenuItem>
+							<MenuItem onTouchTap={()=>{FlowRouter.go('insertwallet')}}>- Intégrer un fichier inventaire</MenuItem>
+							<MenuItem onTouchTap={()=>{FlowRouter.go('actions')}}>- Inventaire des Actions</MenuItem>
+							<MenuItem onTouchTap={()=>{FlowRouter.go('obligations')}}>- Inventaire des Obligations</MenuItem>
 							<hr/>
 							<MenuItem 
 								onTouchTap={()=>{

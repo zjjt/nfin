@@ -3,7 +3,6 @@ import * as actions from '../actions/relever-actions';
 const initialState={
     releverDuJour:null,
     resultatComptaFull:null,
-    resultatComptaSimple:null,
     isFull:true
    
 };
@@ -20,8 +19,7 @@ export default function releveReducer(state=initialState,action){
         console.dir(action.resComptaSimple);
         return{
             ...state,
-            resultatComptaFull:action.resComptaFull,
-            resultatComptaSimple:action.resComptaSimple
+            resultatComptaFull:action.resComptaFull
         };
         case actions.SIMPLIFY:
         
