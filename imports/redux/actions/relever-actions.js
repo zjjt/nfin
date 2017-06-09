@@ -24,8 +24,11 @@ export function releverOk(){
 		Meteor.call('comptabilisation',rel,(err,res)=>{
 			if(res){	
 				if(dispatch({type:START_COMPTA_PROCESS,resComptaFull:res})){
-					alert(JSON.stringify(res));
-					FlowRouter.go("report");
+					//alert(JSON.stringify(res));
+					if(res.length>3){
+						setTimeout(FlowRouter.go("report"),5000);
+					}
+					
 				}
 					
 			}else{

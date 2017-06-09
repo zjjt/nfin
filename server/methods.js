@@ -29,7 +29,263 @@ Array.prototype.groupBy=function(prop){
     },{});
 }
 
+function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi un array d'objet avec la plus ou moins value
+     //FIFO on verifie que cette ligne n'existe pas deja dans l'inventaire si elle existe on skip
+                            console.log("=====tableauRes au debut de la fonction comptaMVPV========")
+                            console.log(tableauRes.length);
+                            console.log(tableauRes);
+                            console.log("=====tableauRes au debut de la fonction comptaMVPV========")
+                            let temp={};
+                            let mvpv={};
+                           let dateAchatFormatted=transformInFrenchDate(e.DATE_ACHAT_DES_TITRES);
+                           console.log("===== Date Achat en francais vente d'action "+dateAchatFormatted);
+                           let existInFIFO=Inventaire.findOne({Symbole:e.SYMBOLE});
+                           if(existInFIFO){
+                              //si l'action existe dans l'inventaire on verifie la premiere occurence de l'action dans l'inventaire
+                               console.log("Le voila premier objet trouver pour la vente d'action symbole= " +e.SYMBOLE+" est: ");
+                               console.log(existInFIFO);
+                                console.log("la quantite restante en stock est "+quantiteRestante);
+                               /**Procedure vente d'actions
+                                * 1-determiner si il ya moins value 
+                                */
+                                if(e.PRIX_UNITAIRE<existInFIFO.PrixUnitaire){
+                                    //on a une moins value=====================================>
+                                    let newQteEnStockDuPremierTrouver;
+                                    if(quantiteRestante===0){
+                                        newQteEnStockDuPremierTrouver=existInFIFO.Quantite-e.QUANTITE;
+                                        console.log("1newQteEnStockDuPremierTrouver: "+newQteEnStockDuPremierTrouver);
+                                    }else if(quantiteRestante>0){
+                                       
+                                        newQteEnStockDuPremierTrouver=existInFIFO.Quantite-quantiteRestante;
+                                        console.log("2newQteEnStockDuPremierTrouver: "+newQteEnStockDuPremierTrouver);
+                                    }
+                                    
+                                    if(newQteEnStockDuPremierTrouver>0){
+                                        console.log("moins value et newQte superieur a 0");
+                                        let montantMV=quantiteRestante>0?(existInFIFO.PrixUnitaire-e.PRIX_UNITAIRE)*quantiteRestante : (existInFIFO.PrixUnitaire-e.PRIX_UNITAIRE)*e.QUANTITE;
+                                        Inventaire.update(existInFIFO,{
+                                            $set:{
+                                                ValBilan:newQteEnStockDuPremierTrouver*existInFIFO.PrixUnitaire,
+                                                Quantite:newQteEnStockDuPremierTrouver,
+                                                lastTypeOp:"VACMV"
+                                            }
+                                        });
+                                        //comptabilisation moins value
+                                        let compte=COMPTES.filter((obj)=>{
+                                            return obj.type==="AC"
+                                        });
+                                        compte=compte[0];
+                                        let libelleQteAfficher;
+                                        if(quantiteRestante>0){
+                                            libelleQteAfficher=quantiteRestante;
+                                        }else{
+                                            libelleQteAfficher=e.QUANTITE;
+                                        }
+                                        temp.compte=compte;
+                                        temp.libelle="Cession de "+libelleQteAfficher+" actions "+e.VALEUR+" au prix d'achat de "+existInFIFO.PrixUnitaire;
+                                        temp.libelleS="Cession de "+libelleQteAfficher+" actions "+e.VALEUR+" au prix d'achat de "+existInFIFO.PrixUnitaire;
+                                        temp.montant=quantiteRestante>0 ? existInFIFO.PrixUnitaire*quantiteRestante : existInFIFO.PrixUnitaire*e.QUANTITE;
+                                        temp.symbole=e.SYMBOLE;
+                                        temp.ref=parseInt(e.REFERENCE);
+                                        temp.ou="C";
+                                        temp.qte=libelleQteAfficher;
+                                        temp.typeOp="VAC";
+                                        temp.indexOP=index;
 
+                                        compte=COMPTES.filter((obj)=>{
+                                            return obj.type==="MV"
+                                        });
+                                        compte=compte[0];
+                                        mvpv.compte=compte;
+                                        mvpv.libelle="Moins value sur cession de "+libelleQteAfficher+" actions "+e.VALEUR;
+                                        mvpv.libelleS="Moins value sur cession de "+libelleQteAfficher+" actions "+e.VALEUR;
+                                        mvpv.montant=montantMV;
+                                        mvpv.symbole=e.SYMBOLE;
+                                        mvpv.ref=parseInt(e.REFERENCE);
+                                        mvpv.ou="D";
+                                        mvpv.qte=libelleQteAfficher;
+                                        mvpv.typeOp="VAC";
+                                        mvpv.indexOP=index+1;
+                                        
+                                        tableauRes.push({temp,mvpv});
+                                        console.log("content of tableauRes avant return======");
+                                        console.log(tableauRes);
+                                        tableauRes.forEach((e)=>pvmvTemp.push(e));
+                                        //return tableauRes;
+                                        
+
+                                    }else if(newQteEnStockDuPremierTrouver<0){
+                                        //enlever la ligne dont la quantite est epuisee
+                                        let montantMV=(existInFIFO.PrixUnitaire-e.PRIX_UNITAIRE)*existInFIFO.Quantite;
+                                        Inventaire.remove(existInFIFO,()=>{
+                                            //on comptabilise la moins value et la sortie de stock(vente)
+                                            
+                                        });
+                                         //comptabilisation moins value
+                                            let compte=COMPTES.filter((obj)=>{
+                                                return obj.type==="AC"
+                                            });
+                                            compte=compte[0];
+                                            temp.compte=compte;
+                                            temp.libelle="Cession de "+existInFIFO.Quantite+" actions "+e.VALEUR+" au prix d'achat de "+existInFIFO.PrixUnitaire;
+                                            temp.libelleS="Cession de "+existInFIFO.Quantite+" actions "+e.VALEUR+" au prix d'achat de "+existInFIFO.PrixUnitaire;
+                                            temp.montant=existInFIFO.PrixUnitaire*existInFIFO.Quantite;
+                                            temp.symbole=e.SYMBOLE;
+                                            temp.ref=parseInt(e.REFERENCE);
+                                            temp.ou="C";
+                                            temp.qte=existInFIFO.Quantite;
+                                            temp.typeOp="VAC";
+                                            temp.indexOP=index;
+
+                                            compte=COMPTES.filter((obj)=>{
+                                                return obj.type==="MV"
+                                            });
+                                            compte=compte[0];
+                                            mvpv.compte=compte;
+                                            mvpv.libelle="Moins value sur cession de "+existInFIFO.Quantite+" actions "+e.VALEUR;
+                                            mvpv.libelleS="Moins value sur cession de "+existInFIFO.Quantite+" actions "+e.VALEUR;
+                                            mvpv.montant=montantMV;
+                                            mvpv.symbole=e.SYMBOLE;
+                                            mvpv.ref=parseInt(e.REFERENCE);
+                                            mvpv.ou="D";
+                                            mvpv.qte=existInFIFO.Quantite;
+                                            mvpv.typeOp="VAC";
+                                            mvpv.indexOP=index+1;
+
+                                            //on yield la valeur trouver
+                                             console.log("longueur du tableau avant "+tableauRes.length);
+                                            tableauRes.push({temp,mvpv});
+                                         
+                                            //on check si on a encore ce type de valeur en stock
+                                            existInFIFO=Inventaire.findOne({Symbole:e.SYMBOLE});
+                                            if(existInFIFO){
+                                                comptaMVPV(e,index++,Math.abs(newQteEnStockDuPremierTrouver),pvmvTemp,tableauRes);
+                                            }
+                                        
+
+                                    }
+                                    
+                                }else if(e.PRIX_UNITAIRE>existInFIFO.PrixUnitaire){
+                                    //on a une plus value=======================================>
+                                    let newQteEnStockDuPremierTrouver;
+                                    if(quantiteRestante===0){
+                                        newQteEnStockDuPremierTrouver=existInFIFO.Quantite-e.QUANTITE;
+                                        console.log("1newQteEnStockDuPremierTrouver: "+newQteEnStockDuPremierTrouver);
+                                    }else if(quantiteRestante>0){
+                                       
+                                        newQteEnStockDuPremierTrouver=existInFIFO.Quantite-quantiteRestante;
+                                        console.log("2newQteEnStockDuPremierTrouver: "+newQteEnStockDuPremierTrouver);
+                                    }
+                                    
+                                    if(newQteEnStockDuPremierTrouver>0){
+                                        console.log("plus value et newQte superieur a 0");
+                                        let montantPV=quantiteRestante>0?(e.PRIX_UNITAIRE-existInFIFO.PrixUnitaire)*quantiteRestante : (e.PRIX_UNITAIRE-existInFIFO.PrixUnitaire)*e.QUANTITE;
+                                        Inventaire.update(existInFIFO,{
+                                            $set:{
+                                                ValBilan:newQteEnStockDuPremierTrouver*existInFIFO.PrixUnitaire,
+                                                Quantite:newQteEnStockDuPremierTrouver,
+                                                lastTypeOp:"VACPV"
+                                            }
+                                        });
+                                        //comptabilisation moins value
+                                        let compte=COMPTES.filter((obj)=>{
+                                            return obj.type==="AC"
+                                        });
+                                        compte=compte[0];
+                                        let libelleQteAfficher;
+                                        if(quantiteRestante>0){
+                                            libelleQteAfficher=quantiteRestante;
+                                        }else{
+                                            libelleQteAfficher=e.QUANTITE;
+                                        }
+                                        temp.compte=compte;
+                                        temp.libelle="Cession de "+libelleQteAfficher+" actions "+e.VALEUR+" au prix d'achat de "+existInFIFO.PrixUnitaire;
+                                        temp.libelleS="Cession de "+libelleQteAfficher+" actions "+e.VALEUR+" au prix d'achat de "+existInFIFO.PrixUnitaire;
+                                        temp.montant=quantiteRestante>0 ? existInFIFO.PrixUnitaire*quantiteRestante : existInFIFO.PrixUnitaire*e.QUANTITE;
+                                        temp.symbole=e.SYMBOLE;
+                                        temp.ref=parseInt(e.REFERENCE);
+                                        temp.ou="C";
+                                        temp.qte=libelleQteAfficher;
+                                        temp.typeOp="VAC";
+                                        temp.indexOP=index;
+
+                                        compte=COMPTES.filter((obj)=>{
+                                            return obj.type==="PV"
+                                        });
+                                        compte=compte[0];
+                                        mvpv.compte=compte;
+                                        mvpv.libelle="Plus value sur cession de "+libelleQteAfficher+" actions "+e.VALEUR;
+                                        mvpv.libelleS="Plus value sur cession de "+libelleQteAfficher+" actions "+e.VALEUR;
+                                        mvpv.montant=montantPV;
+                                        mvpv.symbole=e.SYMBOLE;
+                                        mvpv.ref=parseInt(e.REFERENCE);
+                                        mvpv.ou="C";
+                                        mvpv.qte=libelleQteAfficher;
+                                        mvpv.typeOp="VAC";
+                                        mvpv.indexOP=index+1;
+                                        
+                                        tableauRes.push({temp,mvpv});
+                                        console.log("content of tableauRes avant return======");
+                                        console.log(tableauRes);
+                                        tableauRes.forEach((e)=>pvmvTemp.push(e));
+                                        //return tableauRes;
+                                        
+
+                                    }else if(newQteEnStockDuPremierTrouver<0){
+                                        //enlever la ligne dont la quantite est epuisee
+                                        let montantPV=(e.PRIX_UNITAIRE-existInFIFO.PrixUnitaire)*existInFIFO.Quantite;
+                                        Inventaire.remove(existInFIFO,()=>{
+                                            //on comptabilise la moins value et la sortie de stock(vente)
+                                            
+                                        });
+                                         //comptabilisation moins value
+                                            let compte=COMPTES.filter((obj)=>{
+                                                return obj.type==="AC"
+                                            });
+                                            compte=compte[0];
+                                            temp.compte=compte;
+                                            temp.libelle="Cession de "+existInFIFO.Quantite+" actions "+e.VALEUR+" au prix d'achat de "+existInFIFO.PrixUnitaire;
+                                            temp.libelleS="Cession de "+existInFIFO.Quantite+" actions "+e.VALEUR+" au prix d'achat de "+existInFIFO.PrixUnitaire;
+                                            temp.montant=existInFIFO.PrixUnitaire*existInFIFO.Quantite;
+                                            temp.symbole=e.SYMBOLE;
+                                            temp.ref=parseInt(e.REFERENCE);
+                                            temp.ou="C";
+                                            temp.qte=existInFIFO.Quantite;
+                                            temp.typeOp="VAC";
+                                            temp.indexOP=index;
+
+                                            compte=COMPTES.filter((obj)=>{
+                                                return obj.type==="PV"
+                                            });
+                                            compte=compte[0];
+                                            mvpv.compte=compte;
+                                            mvpv.libelle="Plus value sur cession de "+existInFIFO.Quantite+" actions "+e.VALEUR;
+                                            mvpv.libelleS="Plus value sur cession de "+existInFIFO.Quantite+" actions "+e.VALEUR;
+                                            mvpv.montant=montantPV;
+                                            mvpv.symbole=e.SYMBOLE;
+                                            mvpv.ref=parseInt(e.REFERENCE);
+                                            mvpv.ou="C";
+                                            mvpv.qte=existInFIFO.Quantite;
+                                            mvpv.typeOp="VAC";
+                                            mvpv.indexOP=index+1;
+
+                                            //on yield la valeur trouver
+                                             console.log("longueur du tableau avant "+tableauRes.length);
+                                            tableauRes.push({temp,mvpv});
+                                          
+                                            //on check si on a encore ce type de valeur en stock
+                                            existInFIFO=Inventaire.findOne({Symbole:e.SYMBOLE});
+                                            if(existInFIFO){
+                                                comptaMVPV(e,index++,Math.abs(newQteEnStockDuPremierTrouver),pvmvTemp,tableauRes);
+                                            }
+                                        
+
+                                    }
+                                    
+                                }
+                                
+                           }
+}
 export default ()=>{
     Meteor.methods({
         checkAdminUser(username,mdp){
@@ -119,6 +375,7 @@ export default ()=>{
                     //element.trim();
                     let codop=element.substring(40,44);
                     let libel=element.substring(85);
+                    let valeur="";
                     let comptable_op=(element.substring(72,85)).substring(0,1);
                     let montantMatch=element.substring(72,85).match(/([0-9]{1,})$/);
                     let montant_op=montantMatch[0];
@@ -136,27 +393,55 @@ export default ()=>{
                     if(codop.indexOf('T10')!==-1 && codop.substring(0,1)=="T"){
                         if(codop.indexOf('T100')!==-1 && codop.substring(0,1)=="T"){
                             category="Achat d'actions";
+                           let matchPu=libel.match(/(\d+(\.\d+)?){1,}$/);//cherche tous le premier groupe de nombre a partir de la fin .prend en compte les float et les int
+                            let matchQte=libel.match(/\d+/);//cherche tous le premier groupe de nombre a partir du debut
+                            pu=matchPu[0];
+                            qte=matchQte[0]//libel.substring(qteindexStart,);
+                            let libelerbeforeValeur;
+                            if(libel.match("ACHAT")){
+                                libelerbeforeValeur="ACHAT "+qte;
+                            }else if(libel.match("SOUSCRIPTION OPV")){
+                                libelerbeforeValeur="SOUSCRIPTION OPV "+qte;
+                            }
+                            
+                            let libelerApresValeur=" A XOF "+pu;
+                            let finalvaleur=libel.match(libelerbeforeValeur+"(.*)"+libelerApresValeur);
+                            if(finalvaleur!=null){
+                                valeur=finalvaleur[1].trim();
+                            }else{
+                                valeur=null
+                            }
+                            
                         }
                         else if((codop.indexOf('T102')!==-1||codop.indexOf('T103')!==-1||codop.indexOf('T104')!==-1||codop.indexOf('T105')!==-1) && codop.substring(0,1)=="T"){
                             category="Frais sur achat d'actions";
                         }
-                        let matchPu=libel.match(/(\d+(\.\d+)?){1,}$/);//cherche tous le premier groupe de nombre a partir de la fin .prend en compte les float et les int
-                        let matchQte=libel.match(/\d+/);//cherche tous le premier groupe de nombre a partir du debut
-                        pu=matchPu[0];
-                        qte=matchQte[0]//libel.substring(qteindexStart,);
+                         
+                        console.log(valeur);
+                        
                     }
                     //Vente d'action
                      if(codop.indexOf('T20')!==-1 && codop.substring(0,1)==="T"){
                         if(codop.indexOf('T200')!==-1 && codop.substring(0,1)==="T"){
                             category="Vente d'actions";
+                            let matchPu=libel.match(/(\d+(\.\d+)?){1,}$/);// /(\d+(\.\d+)?){1,}$/ cherche tous le premier groupe de nombre a partir de la fin .prend en compte les float et les int
+                            let matchQte=libel.match(/\d+/);//cherche tous le premier groupe de nombre a partir du debut
+                            pu=matchPu[0];
+                            qte=matchQte[0]//libel.substring(qteindexStart,);
+                            let libelerbeforeValeur="VENTE "+qte;
+                            let libelerApresValeur=" A XOF "+pu;
+                            let finalvaleur=libel.match(libelerbeforeValeur+"(.*)"+libelerApresValeur);
+                            if(finalvaleur!=null){
+                                valeur=finalvaleur[1].trim();
+                            }else{
+                                valeur=null;
+                            }
                         }
                         else if((codop.indexOf('T202')!==-1||codop.indexOf('T203')!==-1||codop.indexOf('T204')!==-1||codop.indexOf('T205')!==-1) && codop.substring(0,1)==="T"){
                             category="Frais sur vente d'actions";
                         }
-                        let matchPu=libel.match(/(\d+(\.\d+)?){1,}$/);// /(\d+(\.\d+)?){1,}$/ cherche tous le premier groupe de nombre a partir de la fin .prend en compte les float et les int
-                        let matchQte=libel.match(/\d+/);//cherche tous le premier groupe de nombre a partir du debut
-                        pu=matchPu[0];
-                        qte=matchQte[0]//libel.substring(qteindexStart,);
+                        
+
                     }
                     //Achat d'obligation
                     if((codop.indexOf('T300')!==-1) && codop.substring(0,1)==="T"){
@@ -256,6 +541,7 @@ export default ()=>{
                        'APRES_ISIN':element.substring(72,85),
                        'LIBELLE_OPERATION':element.substring(85),
                        'CATEGORIE_TITRE':category,
+                       'VALEUR': element.substring(40,44)==="T200"||element.substring(40,44)==="T100"?valeur:null,
                        'QUANTITE':qte,
                        'PRIX_UNITAIRE':pu
 
@@ -267,7 +553,7 @@ export default ()=>{
                    
                 });
                 
-                console.dir(final);
+                //console.dir(final);
                 //let xls=json2xls(final);
                 fut['return'](final);
              
@@ -285,11 +571,13 @@ export default ()=>{
                 let compta;
                 let tempArrD=[];
                 let tempArrC=[];
+                let pvmvTemp=[];//tableau de traitement des plus/moins values
                 console.log("====Dans la comptabilisation=====================================================>")
                 rel.forEach((e,i)=>{
                     //console.dir(e);
                     let codop=e.CODE_OPERATION;
                     let temp={};
+                    
                      //---------GESTION DE LA PARTIE DEBIT---------------------------//
                     //Achat d'action
                     if(codop.indexOf('T10')!==-1 && codop.substring(0,1)=="T"){
@@ -301,8 +589,8 @@ export default ()=>{
                            });
                            compte=compte[0];
                             temp.compte=compte;
-                            temp.libelle="Acquisition de "+e.QUANTITE+" actions "+e.SYMBOLE;
-                            temp.libelleS="Acquisiton de "+e.QUANTITE+" actions "+e.SYMBOLE,
+                            temp.libelle="Acquisition de "+e.QUANTITE+" actions "+e.VALEUR;
+                            temp.libelleS="Acquisiton de "+e.QUANTITE+" actions "+e.VALEUR,
                             temp.montant=e.MONTANT_TOTAL;
                             temp.symbole=e.SYMBOLE;
                             temp.ref=parseInt(e.REFERENCE);
@@ -321,13 +609,14 @@ export default ()=>{
                                let valbilan=parseInt(e.QUANTITE)*parseInt(e.PRIX_UNITAIRE);
                                Inventaire.insert({
                                 DateAcquisition:dateAchatFormatted,
-                                Valeur:e.SYMBOLE,
+                                Valeur:e.VALEUR,
                                 Quantite:e.QUANTITE,
                                 PrixUnitaire:e.PRIX_UNITAIRE,
                                 ValBilan:valbilan,
                                 SGI:'NSIAFINANCE',
                                 Symbole:e.SYMBOLE,
                                 reference:temp.ref,
+                                lastTypeOp:'AAC',
                                 type:"ACTIONS"
 
                                });
@@ -340,8 +629,8 @@ export default ()=>{
                                 });
                                 compte=compte[0];
                                 temp.compte=compte;
-                                temp.libelle="Frais sur acquisition de "+e.QUANTITE+" actions "+e.SYMBOLE+" "+e.LIBELLE_OPERATION;
-                                temp.libelleS="Frais sur acquisition de "+e.QUANTITE+" actions "+e.SYMBOLE,
+                                temp.libelle=e.LIBELLE_OPERATION;
+                                temp.libelleS="Frais sur acquisition de "+e.QUANTITE+" actions "+e.VALEUR,
                                 temp.montant=e.MONTANT_TOTAL;
                                 temp.symbole=e.SYMBOLE;
                                 temp.ref=parseInt(e.REFERENCE,10);
@@ -366,8 +655,8 @@ export default ()=>{
                            });
                            compte=compte[0];
                             temp.compte=compte;
-                            temp.libelle="Cession de "+e.QUANTITE+" actions "+e.SYMBOLE;
-                            temp.libelleS="Cession de "+e.QUANTITE+" actions "+e.SYMBOLE,
+                            temp.libelle="Cession de "+e.QUANTITE+" actions "+e.VALEUR+" au prix de vente de "+e.PRIX_UNITAIRE,
+                            temp.libelleS="Cession de "+e.QUANTITE+" actions "+e.VALEUR+" au prix de vente de "+e.PRIX_UNITAIRE,
                             temp.montant=e.MONTANT_TOTAL;
                             temp.symbole=e.SYMBOLE;
                             temp.ref=parseInt(e.REFERENCE,10);
@@ -375,6 +664,10 @@ export default ()=>{
                             temp.qte=e.QUANTITE;
                             temp.typeOp="VAC";
                             temp.indexOP=i;
+
+                            //recupere le resultat de la recherche et comptabilisation des plus/moins values 
+                            comptaMVPV(e,i,0,pvmvTemp,[]);
+                          
                             
                         
                         }
@@ -385,8 +678,8 @@ export default ()=>{
                                 });
                                 compte=compte[0];
                                 temp.compte=compte;
-                                temp.libelle="Frais sur cession de "+e.QUANTITE+" actions "+e.SYMBOLE+" "+e.LIBELLE_OPERATION;
-                                temp.libelleS="Frais sur cession de "+e.QUANTITE+" actions "+e.SYMBOLE,
+                                temp.libelle=e.LIBELLE_OPERATION,
+                                temp.libelleS="Frais sur cession de "+e.QUANTITE+" actions "+e.VALEUR,
                                 temp.montant=e.MONTANT_TOTAL;
                                 temp.symbole=e.SYMBOLE;
                                 temp.ref=parseInt(e.REFERENCE,10);
@@ -401,6 +694,21 @@ export default ()=>{
                         
                     }
                     tempArrD.push(temp);
+                   // console.log("Pvmp");
+                    //console.log(pvmvTemp[0]);
+                    if(pvmvTemp!==undefined ){
+                       // console.log("A la sortie====")
+                        //console.log(pvmvTemp);
+                        pvmvTemp.forEach((e)=>{
+                            if(e!==undefined){
+                                tempArrD.push(e.mvpv);
+                                tempArrD.push(e.temp);
+                            }
+                            
+                        });
+                        
+                    }
+                    
                     
                 });
                 console.log("====TempArr===========================================>");
@@ -436,7 +744,7 @@ export default ()=>{
                           //cession d4actions et gestion des plus-moins value
                          if(e.typeOp==="VAC"){
                              /**Ici on doit pouvoir determiner dans linventaire si on a une plus value ou moins value */
-                            let compte=COMPTES.filter((obj)=>{
+                           /* let compte=COMPTES.filter((obj)=>{
                                     return obj.type==="AC"
                                 });
                                 compte=compte[0];
@@ -453,7 +761,8 @@ export default ()=>{
                                 indexOp:e.indexOp,
                                
                             };
-                            tempArrC.push(bankobj);
+                            tempArrC.push(bankobj);*/
+
                          }else if(e.typeOp==="FRVAC"){
                              let compte=COMPTES.filter((obj)=>{
                                     return obj.type==="BANK"
@@ -473,6 +782,7 @@ export default ()=>{
                                
                             };
                             tempArrC.push(bankobj);
+                            
                          }
                 });
            
@@ -552,6 +862,7 @@ export default ()=>{
                             SGI:results.data[i].SGI,
                             Symbole:results.data[i].SYMBOL,
                             reference:parseInt(results.data[i].Reference,10),
+                            lastTypeOp:"INVFILE",
                             type:results.data[i].TYPE_VALEUR
                         });
                     }

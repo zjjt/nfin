@@ -42,10 +42,10 @@ import {Session} from 'meteor/session';
                 <MenuItem primaryText="Modifier un utilisateur" onClick={()=>{FlowRouter.go('listUser')}}/>
                 
                 <MenuItem primaryText="Déconnection" onClick={()=>{
-                    store.dispatch(deconnection)
+                    store.dispatch(deconnection);
+                    FlowRouter.go('home');
                     window.location.reload();
-                    
-                    
+                          
                 }}/>
             </IconMenu> 
             );

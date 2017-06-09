@@ -46,9 +46,12 @@ class AfterComptaTable extends Component{
                         multiSelectable: false,
                         enableSelectAll:false,
                         deselectOnClickaway:false,
-                        showCheckboxes:true,
+                        showCheckboxes:false,
                         height:'500px'
-                    }
+                    },
+                sommeD:0,
+                sommeC:0,
+                resultatClass:""
             };
         }
 
@@ -57,6 +60,26 @@ class AfterComptaTable extends Component{
         }
         componentDidMount(){
            // $('.tableau').parent().css("width","4288px");
+          if(this.props.opCompta!==undefined){
+              let sommeD,sommeC,classo;
+            this.props.opCompta.map((e)=>{
+                if(e.ou==="D"){
+                    sommeD+=e.montant;
+                }else if(e.ou==="C"){
+                    sommeC+=e.montant;
+                }
+            });
+            if(sommeC===sommeD){
+                classo="lightgreenbak";
+            }else{
+                classo="redalertbak"
+            }
+             this.setState({
+                    sommeD:sommeD,
+                    sommeC:sommeC,
+                    resultatClass:classo
+                });
+          }
         }
 
     
@@ -137,7 +160,7 @@ toggleTextandExpand()
                                                </TableRowColumn>
                                             </TableRow>
                                            ):typeof opCompta!=='undefined'?opCompta.map((row,index)=>{
-                                            console.dir(row);
+                                            
                                             return(<TableRow key={index} selected={this.state.selectedRows.indexOf(index)!==-1} ref={`user${index}`}>
                                                 <TableRowColumn  title={row.ou==="D"?row.compte.compte:""}>{row.ou==="D"?row.compte.compte:""}</TableRowColumn>
                                                 <TableRowColumn  title={row.ou==="C"?row.compte.compte:""}>{row.ou==="C"?row.compte.compte:""}</TableRowColumn>
@@ -154,6 +177,15 @@ toggleTextandExpand()
                                             </TableRow>
                                         
                         }
+                                    <TableRow>
+                                        <TableRowColumn colSpan="3">
+                                            <div style={{textAlign:'center'}}>
+                                        Total des Montants:   
+                                            </div>
+                                        </TableRowColumn>
+                                        <TableRowColumn  title="Somme totale des montant au débit">{opCompta!==undefined?this.state.sommeD:""}</TableRowColumn>
+                                        <TableRowColumn  title="Somme totale des montant au crédit">{opCompta!==undefined?this.state.sommeC:""}</TableRowColumn>
+                                    </TableRow>
                         </TableBody>
                     </Table>
                      <div className="loadmoreDiv" >

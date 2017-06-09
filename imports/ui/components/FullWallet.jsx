@@ -234,6 +234,7 @@ const getInventory=gql`
             SGI
             Symbole
             reference
+            lastTypeOp
             type
         },
         

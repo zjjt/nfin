@@ -16,6 +16,9 @@ import gql from 'graphql-tag';
 import MenuItem from 'material-ui/MenuItem';
 import {miseajourDispo} from '../../redux/actions/user-actions.js'
 import LinearProgress from 'material-ui/LinearProgress';
+import {Meteor} from 'meteor/meteor';
+import {Inventaire} from '../../api/collections.js';
+import {createContainer} from 'meteor/react-meteor-data';
 
 import {$} from 'meteor/jquery';
 
@@ -28,7 +31,7 @@ class AfterComptaInv extends Component{
             this.state={
                 dialogIsOpen:false,
                 errorMsg:'',
-                showFIFOSnap:true,
+                showFIFOSnap:false,
                 selectedRows:[],
                 regSelected:[],
                 table:{
@@ -159,7 +162,7 @@ console.dir(this.props);
                                                </TableRowColumn>
                                             </TableRow>
                                            ):this.state.showFIFOSnap?typeof fifoSnap!=='undefined'?fifoSnap.map((row,index)=>{
-                                            return(<TableRow key={index} className="animated bounceInRight" selected={this.state.selectedRows.indexOf(index)!==-1} ref={`user${index}`}>
+                                            return(<TableRow key={index} className="animated bounceInLeft" selected={this.state.selectedRows.indexOf(index)!==-1} ref={`user${index}`}>
                                                <TableRowColumn title="">{index+1}</TableRowColumn>
                                                 <TableRowColumn title={row.DateAcquisition}>{row.DateAcquisition}</TableRowColumn>
                                                 <TableRowColumn title={row.Valeur}>{row.Valeur}</TableRowColumn>
@@ -175,17 +178,34 @@ console.dir(this.props);
                                                 Aucun élément dans linventaire<br/>veuillez re faire une integration    
                                                     </div>
                                                </TableRowColumn>
-                                            </TableRow>:typeof inventaire!=='undefined'?inventaire.map((row,index)=>{
-                                            return(<TableRow key={index} className="animated bounceInRight" selected={this.state.selectedRows.indexOf(index)!==-1} ref={`user${index}`}>
-                                                <TableRowColumn title="">{index+1}</TableRowColumn>
-                                                <TableRowColumn title={row.DateAcquisition}>{row.DateAcquisition}</TableRowColumn>
-                                                <TableRowColumn title={row.Valeur}>{row.Valeur}</TableRowColumn>
-                                                <TableRowColumn title={row.Quantite}>{row.Quantite}</TableRowColumn>
-                                                <TableRowColumn title={row.PrixUnitaire}>{row.PrixUnitaire}</TableRowColumn>
-                                                <TableRowColumn title={row.ValBilan}>{row.ValBilan}</TableRowColumn>
-                                               <TableRowColumn title={row.Symbole}>{row.Symbole}</TableRowColumn>
-                                               <TableRowColumn title={row.reference}>{row.reference}</TableRowColumn> 
-                                            </TableRow>);
+                                            </TableRow>:typeof inventaire!=='undefined'?inventaire.map((row,index,arr)=>{
+                                                let classo="animated bounceInright ";
+                                                let classy="";
+                                                let val;
+                                                
+                                                   
+                                                        if(row.lastTypeOp==="AAC"){
+                                                            //On a affaire a un achat d'action on surligne avec une couleur verte
+                                                           classy="lightbluebak";
+                                                        }else if(row.lastTypeOp==="VACMV"){
+                                                            classy="orangebak"
+                                                        }else if(row.lastTypeOp==="VACPV"){
+                                                            classy="greenbak"
+                                                        }
+                                                         val=(<TableRow key={index} className={classo+classy} selected={this.state.selectedRows.indexOf(index)!==-1} ref={`user${index}`}>
+                                                                    <TableRowColumn title="">{index+1}</TableRowColumn>
+                                                                    <TableRowColumn title={row.DateAcquisition}>{row.DateAcquisition}</TableRowColumn>
+                                                                    <TableRowColumn title={row.Valeur}>{row.Valeur}</TableRowColumn>
+                                                                    <TableRowColumn title={row.Quantite}>{row.Quantite}</TableRowColumn>
+                                                                    <TableRowColumn title={row.PrixUnitaire}>{row.PrixUnitaire}</TableRowColumn>
+                                                                    <TableRowColumn title={row.ValBilan}>{row.ValBilan}</TableRowColumn>
+                                                                <TableRowColumn title={row.Symbole}>{row.Symbole}</TableRowColumn>
+                                                                <TableRowColumn title={row.reference}>{row.reference}</TableRowColumn> 
+                                                                </TableRow>);
+                                                   
+                                                    
+                                                
+                                                return val;
                                         }):<TableRow>
                                                <TableRowColumn colSpan="14">
                                                     <div style={{textAlign:'center'}}>
@@ -202,13 +222,13 @@ console.dir(this.props);
                             label="<<< Voir avant comptabilisation" 
                             labelColor="white"
                             backgroundColor="#cd9a2e"
-                            onClick={()=>loadMoreEntries()}
+                            onClick={()=>{this.setState({showFIFOSnap:true})}}
                         />
                         <RaisedButton 
                             label="Voir après comptabilisation >>>" 
                             labelColor="white"
                             backgroundColor="#cd9a2e"
-                            onClick={this._dialogOpen.bind(this)}
+                            onClick={()=>{this.setState({showFIFOSnap:false})}}
                         />
                         {loading?"Chargement...":null}
                         
@@ -237,7 +257,19 @@ AfterComptaInv.propTypes={
        search:PropTypes.string,
 };
 
-const getInventory=gql`
+export default createContainer(()=>{
+    const invhandle=Meteor.subscribe('inventaireTitre');
+    const loading=!invhandle.ready();
+    const invone=Inventaire.findOne({type:"ACTIONS"});
+    const invExist=!loading && !!invone;
+    return{
+        loading,
+        invone,
+        invExist,
+        inventaire:invExist? Inventaire.find().fetch():[],
+    };
+},AfterComptaInv);
+/*const getInventory=gql`
     query getInventory($type:String!){
         inventaire(type:$type){
             DateAcquisition
@@ -248,6 +280,7 @@ const getInventory=gql`
             SGI
             Symbole
             reference
+            lastTypeOp
             type
         },
         
@@ -281,4 +314,4 @@ export default graphql(getInventory,{
             }
         }
    
-})(AfterComptaInv);
+})(AfterComptaInv);*/

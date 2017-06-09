@@ -41,6 +41,7 @@ class AfterCompta extends Component {
         $('.toolbarTitle').delay(18000).show().addClass("fadeInRight animated");
         $('.animAppBar1').addClass("animated fadeInLeft");
         $('.animAppBar2').addClass("animated fadeInRight");
+        $('.window').resizable();
     }
 
     _orderTable(){
@@ -99,7 +100,7 @@ class AfterCompta extends Component {
                                         textAlign:'center'
                                     }}
                                 />
-                                <AfterComptaInv fifoSnap={fifoSnap?fifoSnap:null} type="ALL"/>
+                                <AfterComptaInv fifoSnap={fifoSnap?fifoSnap:null} type="ALL" search=""/>
                             </div>
                             
                         </div>

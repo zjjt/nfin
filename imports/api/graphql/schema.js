@@ -18,6 +18,7 @@ const schema=`
         SGI:String
         Symbole:String
         reference:Int
+        lastTypeOp:String
         type:String
     }
     type Query{

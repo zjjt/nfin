@@ -88,7 +88,6 @@ componentDidMount(){
                                 <TableHeaderColumn tooltip="Code ISIN">Code ISIN</TableHeaderColumn>
                                 <TableHeaderColumn tooltip="Operation comptable transposée dans nos comptes">Opération comptable</TableHeaderColumn>
                                 <TableHeaderColumn tooltip="Montant total de l'opération">Montant total</TableHeaderColumn>
-                                <TableHeaderColumn tooltip="Opération comptable et montant initiaux dans le relevé">Opération/Montant SLR </TableHeaderColumn>
                                 <TableHeaderColumn tooltip="Libéllé de l'opération">Libéllé</TableHeaderColumn>
                                 <TableHeaderColumn tooltip="catégorie de l'opération(ACTION,OBLIGATION)">Catégorie</TableHeaderColumn>
                                 <TableHeaderColumn tooltip="Quantité des titres achetés ou vendus">Quantité</TableHeaderColumn>
@@ -115,7 +114,6 @@ componentDidMount(){
                                         <TableRowColumn title={row.CODE_ISIN}>{row.CODE_ISIN}</TableRowColumn>
                                         <TableRowColumn title={row.OPERATION_COMPTABLE}>{row.OPERATION_COMPTABLE}</TableRowColumn>
                                         <TableRowColumn title={row.MONTANT_TOTAL}>{row.MONTANT_TOTAL}</TableRowColumn>
-                                        <TableRowColumn title={row.APRES_ISIN}>{row.APRES_ISIN}</TableRowColumn>
                                         <TableRowColumn title={row.LIBELLE_OPERATION}>{row.LIBELLE_OPERATION}</TableRowColumn>
                                         <TableRowColumn title={row.CATEGORIE_TITRE}>{row.CATEGORIE_TITRE}</TableRowColumn>
                                         <TableRowColumn title={row.QUANTITE}>{row.QUANTITE}</TableRowColumn>
