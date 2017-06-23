@@ -15,6 +15,9 @@ import {FichiersOP} from '../../api/collections';
 import {decoupagedone,releverOk} from '../../redux/actions/relever-actions';
 import {snapInvent} from '../../redux/actions/inventaire-actions';
 import RelevTable from './RelevTable.jsx';
+import {Inventaire} from '../../api/collections.js';
+const R= require('ramda');
+import {transformInFrenchDate,groupSumBySymbole} from '../../utils/utils.js';
 import {$} from 'meteor/jquery';
 
 
@@ -137,13 +140,57 @@ const styles={
                     label="OK"
                     primary={true}
                     onTouchTap={()=>{
-                         this.setState({
-                                        error:false,
-                                        showLoader:true,
-                                        errorMsg:`Veuillez patienter pendant que la magie opère...`
+                        //On cherche a savoir si l'on a assez de stock pour pouvoir vendre sinon le relever est errone
+                        let rel=this.state.decoupage;
+                        if(rel.legnth||rel!=undefined){
+                            let arrSym=[],invArr=[];
+                            rel.map((e)=>{
+                                if(e.CODE_OPERATION="T200")
+                                arrSym.push({symbole:e.SYMBOLE,qte:e.QUANTITE});
+                            });
+                            invArr=Inventaire.find().fetch();
+                            if(invArr.length<0){
+                                this.setState({
+                                        error:true,
+                                        showLoader:false,
+                                        errorMsg:`Il n'y a aucun stock dans l'inventaire. Veuillez ajouter un inventaire.`
                                     });
                                     this._dialogOpen();
-                        dispatch(releverOk());
+                                    return;
+                            }
+                            arrSym=groupSumBySymbole(arrSym,["symbole"],["qte"]);
+                            invArr=groupSumBySymbole(invArr,["Symbole"],["Quantite"]);
+                            //alert("arrSym/"+JSON.stringify(arrSym));
+                            //alert("invArr/"+JSON.stringify(invArr));
+                            arrSym.forEach((e)=>{
+                                let inv=R.filter(R.where({'Symbole':R.contains(e.symbole)}))(invArr);
+                                if(e.qte>inv[0].Quantite){
+                                    this.setState({
+                                        error:true,
+                                        showLoader:false,
+                                        errorMsg:`Le relevé indique que l'opération de cession d'action ${inv[0].Valeur} a une quantité supérieure (${e.qte}) à celle présente dans le stock (${inv[0].Quantite}).Veuillez fournir un relevé valide.`
+                                    });
+                                    this._dialogOpen();
+                                }else{
+                                    this.setState({
+                                        error:false,
+                                        showLoader:true,
+                                        errorMsg:`Veuillez patienter pendant que le processus comptabilisation s'exécute...`
+                                    });
+                                    this._dialogOpen();
+                                    dispatch(releverOk());
+                                }
+                                //alert(JSON.stringify(inv));
+                            });
+                            
+                        }else{
+                            this.setState({
+                                        error:true,
+                                        showLoader:false,
+                                        errorMsg:`Veuillez vérifier que vous avez fourni un relevé d'opérations valide`
+                                    });
+                        }
+                        
                     }}
                 />,
                 ];
@@ -151,7 +198,15 @@ const styles={
         <FlatButton
             label="OK"
             primary={true}
-            onTouchTap={this._dialogClose.bind(this)}
+            onTouchTap={()=>{
+                if(this.state.error){
+                    this.setState({
+                        error:false
+                    });
+                    FlowRouter.go('dashboard');
+                }
+                this._dialogClose();
+            }}
         />,
         ];
        

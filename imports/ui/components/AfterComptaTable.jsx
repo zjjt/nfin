@@ -17,6 +17,7 @@ import MenuItem from 'material-ui/MenuItem';
 import {miseajourDispo} from '../../redux/actions/user-actions.js'
 import LinearProgress from 'material-ui/LinearProgress';
 import {simplifyOp,explodeOps} from '../../redux/actions/relever-actions.js';
+import {formatNumberInMoney} from '../../utils/utils.js';
 import {$} from 'meteor/jquery';
 
 //Quand on click sur les checkbox on compte le nombre de lignes selectionnes et on dispacth une action sur store avec side effects de modification dans la database
@@ -49,37 +50,16 @@ class AfterComptaTable extends Component{
                         showCheckboxes:false,
                         height:'500px'
                     },
-                sommeD:0,
-                sommeC:0,
-                resultatClass:""
+                
             };
         }
 
         componentDidUpdate(){
-          console.dir(this.props.data);
+         
         }
         componentDidMount(){
            // $('.tableau').parent().css("width","4288px");
-          if(this.props.opCompta!==undefined){
-              let sommeD,sommeC,classo;
-            this.props.opCompta.map((e)=>{
-                if(e.ou==="D"){
-                    sommeD+=e.montant;
-                }else if(e.ou==="C"){
-                    sommeC+=e.montant;
-                }
-            });
-            if(sommeC===sommeD){
-                classo="lightgreenbak";
-            }else{
-                classo="redalertbak"
-            }
-             this.setState({
-                    sommeD:sommeD,
-                    sommeC:sommeC,
-                    resultatClass:classo
-                });
-          }
+          
         }
 
     
@@ -118,6 +98,24 @@ toggleTextandExpand()
 
         render(){
             const {handleSubmit,pristine,submitting,dispatch,opCompta,isFull}=this.props;
+             console.dir(this.props.data);
+             let sommeC=0,sommeD=0,resultatClass='';
+          if(opCompta!==undefined){
+                opCompta.map((e)=>{
+                if(e.ou==="D"){
+                    sommeD+=e.montant;
+                }else if(e.ou==="C"){
+                    sommeC+=e.montant;
+                }
+            });
+            if(sommeC===sommeD){
+                resultatClass="lightgreenbak";
+            }else{
+                resultatClass="redalertbak"
+            }
+            //alert("sommeD "+sommeD+" sommeC "+sommeC);
+           
+          }
             return(
                 <div >
                    
@@ -159,14 +157,14 @@ toggleTextandExpand()
                                                     </div>
                                                </TableRowColumn>
                                             </TableRow>
-                                           ):typeof opCompta!=='undefined'?opCompta.map((row,index)=>{
+                                           ):typeof opCompta!==undefined?opCompta.map((row,index)=>{
                                             
                                             return(<TableRow key={index} selected={this.state.selectedRows.indexOf(index)!==-1} ref={`user${index}`}>
                                                 <TableRowColumn  title={row.ou==="D"?row.compte.compte:""}>{row.ou==="D"?row.compte.compte:""}</TableRowColumn>
                                                 <TableRowColumn  title={row.ou==="C"?row.compte.compte:""}>{row.ou==="C"?row.compte.compte:""}</TableRowColumn>
                                                 <TableRowColumn  title={isFull?row.libelle:row.libelleS}>{isFull?row.libelle:row.libelleS}</TableRowColumn>
-                                                <TableRowColumn  title={row.ou==="D"?row.montant:""}>{row.ou==="D"?row.montant:""}</TableRowColumn>
-                                                <TableRowColumn  title={row.ou==="C"?row.montant:""}>{row.ou==="C"?row.montant:""}</TableRowColumn>
+                                                <TableRowColumn  title={row.ou==="D"?formatNumberInMoney(row.montant):""}>{row.ou==="D"?formatNumberInMoney(row.montant):""}</TableRowColumn>
+                                                <TableRowColumn  title={row.ou==="C"?formatNumberInMoney(row.montant):""}>{row.ou==="C"?formatNumberInMoney(row.montant):""}</TableRowColumn>
                                             </TableRow>);
                                         }):<TableRow>
                                                <TableRowColumn colSpan="8">
@@ -177,14 +175,22 @@ toggleTextandExpand()
                                             </TableRow>
                                         
                         }
-                                    <TableRow>
+                                    <TableRow className={resultatClass}>
                                         <TableRowColumn colSpan="3">
                                             <div style={{textAlign:'center'}}>
                                         Total des Montants:   
                                             </div>
                                         </TableRowColumn>
-                                        <TableRowColumn  title="Somme totale des montant au débit">{opCompta!==undefined?this.state.sommeD:""}</TableRowColumn>
-                                        <TableRowColumn  title="Somme totale des montant au crédit">{opCompta!==undefined?this.state.sommeC:""}</TableRowColumn>
+                                        <TableRowColumn  title="Somme totale des montant au débit">{opCompta!==undefined?formatNumberInMoney(sommeD):""}</TableRowColumn>
+                                        <TableRowColumn  title="Somme totale des montant au crédit">{opCompta!==undefined?formatNumberInMoney(sommeC):""}</TableRowColumn>
+                                    </TableRow>
+                                    <TableRow className={resultatClass}>
+                                         <TableRowColumn colSpan="3">
+                                            <div style={{textAlign:'center'}}>
+                                        Ecart:
+                                            </div>
+                                        </TableRowColumn>
+                                        <TableRowColumn colSpan="2"  title="écart entre les montants">{formatNumberInMoney(sommeD-sommeC)}</TableRowColumn>
                                     </TableRow>
                         </TableBody>
                     </Table>

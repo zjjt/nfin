@@ -19,6 +19,7 @@ import LinearProgress from 'material-ui/LinearProgress';
 import {Meteor} from 'meteor/meteor';
 import {Inventaire} from '../../api/collections.js';
 import {createContainer} from 'meteor/react-meteor-data';
+import {formatNumberInMoney} from '../../utils/utils.js';
 
 import {$} from 'meteor/jquery';
 
@@ -167,8 +168,8 @@ console.dir(this.props);
                                                 <TableRowColumn title={row.DateAcquisition}>{row.DateAcquisition}</TableRowColumn>
                                                 <TableRowColumn title={row.Valeur}>{row.Valeur}</TableRowColumn>
                                                 <TableRowColumn title={row.Quantite}>{row.Quantite}</TableRowColumn>
-                                                <TableRowColumn title={row.PrixUnitaire}>{row.PrixUnitaire}</TableRowColumn>
-                                                <TableRowColumn title={row.ValBilan}>{row.ValBilan}</TableRowColumn>
+                                                <TableRowColumn title={formatNumberInMoney(row.PrixUnitaire)}>{formatNumberInMoney(row.PrixUnitaire)}</TableRowColumn>
+                                                <TableRowColumn title={formatNumberInMoney(row.ValBilan)}>{formatNumberInMoney(row.ValBilan)}</TableRowColumn>
                                                <TableRowColumn title={row.Symbole}>{row.Symbole}</TableRowColumn>
                                                <TableRowColumn title={row.reference}>{row.reference}</TableRowColumn> 
                                             </TableRow>);

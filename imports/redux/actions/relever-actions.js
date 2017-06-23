@@ -25,8 +25,9 @@ export function releverOk(){
 			if(res){	
 				if(dispatch({type:START_COMPTA_PROCESS,resComptaFull:res})){
 					//alert(JSON.stringify(res));
-					if(res.length>3){
-						setTimeout(FlowRouter.go("report"),5000);
+					if(res!=undefined){
+						FlowRouter.go("report");
+						//setTimeout(FlowRouter.go("report"),5000);
 					}
 					
 				}

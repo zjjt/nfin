@@ -7,7 +7,7 @@ import Excel from 'exceljs';
 import LineByLineReader from 'line-by-line';
 import {TempReleve,SGI,ComptesFinanciers,FichiersInv,Inventaire} from '../imports/api/collections.js';
 import Future from 'fibers/future';
-import {transformInFrenchDate} from '../imports/utils/utils.js'
+import {transformInFrenchDate,groupByLibel} from '../imports/utils/utils.js';
 //import {Baby} from 'meteor/modweb:baby-parse';
 import Baby from 'babyparse';
 import {check} from 'meteor/check';
@@ -817,18 +817,6 @@ export default ()=>{
                 let dEnd=_.uniq(final,(v)=>{
                     return v.compte.compte && v.compte.libelle && v.compte.type && v.libelle && v.libelleS && v.montant && v.symbole && v.ref && v.ou && v.qte && v.typeOp && v.indexOp;
                 });
-                const groupByLibel=R.compose(
-					R.forEach((v)=>{
-						//alert(R);j
-							return v;		
-					}),
-					R.values,
-					R.groupBy(R.compose(
-							R.join(''),
-							R.reject(R.isNil),
-							R.props(['ref','libelle'])
-						))
-				);
                 let properOps=groupByLibel(dEnd);
 				let finaly=[];
 				properOps.forEach((e)=>{

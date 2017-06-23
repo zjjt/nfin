@@ -31,6 +31,13 @@ footer
   padding-left 10px
   padding-right 10px
 
+
+
+.lit
+  -webkit-box-shadow: -6px -6px 50px 2px lightblue
+  -moz-box-shadow: -6px -6px 50px 2px lightblue
+  box-shadow: -6px -6px 50px 2px lightblue
+    
 .lightgreenbak
   background lightgreen
 .redalertbak
@@ -43,12 +50,37 @@ footer
   background orange
 .lightbluebak
   background lightblue
+.inventfilters
+  display flex
+  flex-direction row
+  justify-content center
+  .filters
+    width 70px
+    height 70px
+    text-align center
+    padding 10px
+    margin-left 10px
+    margin-right 10px
+    border 2px solid rgba(0,0,0,0)
+    display flex
+    flex-direction column
+    &:hover
+      cursor pointer
+      border 2px outset gray
+    .fintern
+      flex-grow 2
+      width 100%
+      height 100px
+      p
+        font-size 10px
+        font-weight bold
+
 .twoWindows
   display flex
   flex-direction row
   justify-content space-around
   .VerticalSeparator
-    width 15px
+    width 25px
     background-color #999999
     min-height 100%
   .window
