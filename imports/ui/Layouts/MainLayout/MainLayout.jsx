@@ -118,10 +118,10 @@ export default class MainLayout extends Component{
 									this.handleClose();
 								}}>Gestion du portefeuille</MenuItem>
 							
-							<MenuItem onTouchTap={()=>{FlowRouter.go('wallet')}}>Inventaire total</MenuItem>
-							<MenuItem onTouchTap={()=>{FlowRouter.go('insertwallet')}}>- Intégrer un fichier inventaire</MenuItem>
-							<MenuItem onTouchTap={()=>{FlowRouter.go('actions')}}>- Inventaire des Actions</MenuItem>
-							<MenuItem onTouchTap={()=>{FlowRouter.go('obligations')}}>- Inventaire des Obligations</MenuItem>
+							<MenuItem onTouchTap={()=>{FlowRouter.go('wallet');
+							this.handleClose();}}>Inventaire total</MenuItem>
+							<MenuItem onTouchTap={()=>{FlowRouter.go('insertwallet');
+							this.handleClose();}}>Intégrer un fichier inventaire</MenuItem>
 							<hr/>
 							<MenuItem 
 								onTouchTap={()=>{
@@ -129,10 +129,15 @@ export default class MainLayout extends Component{
 									this.handleClose();
 								}}>Intégrer un fichier</MenuItem>
 							<hr/>
-							<MenuItem onTouchTap={()=>{FlowRouter.go('histo')}}>Historique des opérations comptabilisées</MenuItem>
+							<MenuItem onTouchTap={()=>{FlowRouter.go('histo');
+							this.handleClose();}}>Historique des opérations comptabilisées</MenuItem>
 							<MenuItem style={{color:'white',backgroundColor:'#1f2d67'}}>Administration</MenuItem>
-							<MenuItem onTouchTap={()=>{FlowRouter.go('histo')}}>Edition des SGI</MenuItem>
-							<MenuItem onTouchTap={()=>{FlowRouter.go('histo')}}>Edition des comptes financiers</MenuItem>
+							<MenuItem onTouchTap={()=>{FlowRouter.go('fracform');
+							this.handleClose();}}>Edition des taux de fractionnement</MenuItem>
+							<MenuItem onTouchTap={()=>{FlowRouter.go('histo');
+							this.handleClose();}}>Edition des SGI</MenuItem>
+							<MenuItem onTouchTap={()=>{FlowRouter.go('histo');
+							this.handleClose();}}>Edition des comptes financiers</MenuItem>
 							
 							
 						</Drawer>

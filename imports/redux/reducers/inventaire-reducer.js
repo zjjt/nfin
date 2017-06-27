@@ -1,7 +1,8 @@
 import * as actions from '../actions/inventaire-actions';
 
 const initialState={
-    inventaireSnap:null 
+    inventaireSnap:null,
+    filter:'ALL'
 };
 
 export default function inventaireReducer(state=initialState,action){
@@ -11,6 +12,11 @@ export default function inventaireReducer(state=initialState,action){
         return{
             ...state,
             inventaireSnap:action.inventaireSnap
+        };
+        case actions.FILTRERINVENTAIRE:
+        return{
+            ...state,
+            filter:action.filter
         };
         
         default:

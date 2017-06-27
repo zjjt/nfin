@@ -13,6 +13,7 @@ import AfterCompta from '../../ui/containers/AfterCompta.jsx';
 import AdminDashboard from '../../ui/containers/AdminDashboard.jsx';
 import CreateUser from '../../ui/containers/CreateUser.jsx';
 import AdminUserList from '../../ui/containers/AdminUserList.jsx';
+import FormuFractionnement from '../../ui/containers/FormuFractionnement.jsx'
 import Wallet from '../../ui/containers/Wallet.jsx';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import {FichiersInv,Inventaire} from '../../api/collections.js';
@@ -45,16 +46,23 @@ FlowRouter.route('/dashboard',{
 	}
 });
 
-FlowRouter.route('/dashboard/wallet/actions/',{
-	name:'actions',
+
+FlowRouter.route('/dashboard/fractionnement/',{
+	name:'fracform',
 	triggersEnter:[(context,redirect)=>{
-		if(!Meteor.user()){
-			redirect('/');
+		let res=Inventaire.find().count();
+		if(!res){
+			if(!Meteor.user()){
+					redirect('/');
+				}else if(Meteor.user()){
+					alert("Aucun inventaire détecté !!!");
+					redirect('/dashboard/insert-wallet/');
+				}
 		}
 	}],
 	action(){
 		mount(MainLayout,
-			{content:()=><Actions/>})
+			{content:()=><FormuFractionnement/>})
 	}
 });
 
@@ -96,18 +104,7 @@ FlowRouter.route('/dashboard/insert-wallet/',{
 			{content:()=><InventUploader/>})
 	}
 });
-FlowRouter.route('/dashboard/wallet/obligations/',{
-	name:'obligations',
-	triggersEnter:[(context,redirect)=>{
-		if(!Meteor.user()){
-			redirect('/');
-		}
-	}],
-	action(){
-		mount(MainLayout,
-			{content:()=><Obligations/>})
-	}
-});
+
 FlowRouter.route('/dashboard/treatOps',{
 	name:'upload',
 	triggersEnter:[(context,redirect)=>{

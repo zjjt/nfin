@@ -15,6 +15,8 @@ import {Meteor} from 'meteor/meteor';
 import {Random} from 'meteor/random';
 import _ from 'lodash';
 
+
+
  class CreateUserForm extends Component{
     constructor(props){
         super(props);

@@ -5,6 +5,7 @@ const R= require('ramda');
 import '../../utils/utils.js';
 
 export const SNAPINVENTAIRE='SNAPINVENTAIRE';
+export const FILTRERINVENTAIRE='FILTRERINVENTAIRE';
 
 export function snapInvent(){
 	let inv=Inventaire.find({}).fetch();
@@ -12,4 +13,11 @@ export function snapInvent(){
 		type:SNAPINVENTAIRE,
 		inventaireSnap:inv
 	};
+}
+
+export function filterBy(filtre){
+	return{
+		type:FILTRERINVENTAIRE,
+		filter:filtre
+	}
 }

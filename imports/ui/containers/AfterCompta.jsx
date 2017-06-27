@@ -35,6 +35,9 @@ class AfterCompta extends Component {
         super();
         this.state={
            dialogTIsOpen:false,
+           dialogIsOpen:false,
+           dmessage:"Vous vous appretez à quitter la page de comptabilisation. En êtes vous sur ?",
+           dtitle:"Quitter la page ?",
            alreadyOp:false ,
            agrandir:'',
 
@@ -77,6 +80,13 @@ class AfterCompta extends Component {
                 orderDesc:!orderDesc
             });
      }
+    _dialogOpen(){
+        this.setState({dialogIsOpen: true});
+    }
+
+    _dialogClose(){
+        this.setState({dialogIsOpen: false});
+    }
     _dialogTOpen(){
         this.setState({dialogTIsOpen: true,alreadyOp:true});
     }
@@ -86,7 +96,7 @@ class AfterCompta extends Component {
     }
 
     render(){
-       const {opCompta,isFull,fifoSnap}=this.props;
+       const {opCompta,isFull,fifoSnap,filtreInv}=this.props;
         const resiser1=(<ActionAspectRatio style={style.agrandicon} 
                             color="#ffffff" 
                             hoverColor="#cd9a2e" 
@@ -109,6 +119,28 @@ class AfterCompta extends Component {
                                 this._dialogTOpen();
                             }}
                             />);
+         const dialogActions = [
+                <FlatButton
+                    label="FERMER"
+                    primary={true}
+                    onTouchTap={this._dialogClose.bind(this)}
+                />,
+                <FlatButton
+                    label="OK"
+                    primary={true}
+                    onTouchTap={()=>{
+                       if(this.state.dtitle==="Quitter la page ?"){
+                           //on efface l'inventaire actuel et on le remplace par le snap dans redux
+                                Meteor.call('dropInventory',(err,res)=>{
+                                    Meteor.call('chargeInvWithSnap',fifoSnap,()=>{FlowRouter.go('dashboard')});
+                                });
+                           
+                       }
+                        
+                    }}
+                />,
+               
+                ];
         const dialogTActions = [
                 <FlatButton
                     label="Fermer"
@@ -118,6 +150,15 @@ class AfterCompta extends Component {
                 ];
         return(
             <div className="centeredContentSingle">
+                    <Dialog
+                    title={this.state.dtitle}
+                    actions={dialogActions}
+                    modal={false}
+                    open={this.state.dialogIsOpen}
+                    onRequestClose={this._dialogClose}
+                    >
+                        {this.state.dmessage}
+                    </Dialog>
                     <Dialog
                             title={this.state.agrandir==="comptabilisation"?"Journal de comptabilisation":this.state.agrandir==="inventaire"?"Inventaire après comptabilisation":null}
                             actions={dialogTActions}
@@ -129,7 +170,7 @@ class AfterCompta extends Component {
                             autoScrollBodyContent={true}
                             autoDetectWindowHeight={true}
                             >
-                            {this.state.agrandir==="comptabilisation"?(<AfterComptaTableZoom opCompta={opCompta} isFull={isFull}/>):this.state.agrandir==="inventaire"?(<AfterComptaInvZoom fifoSnap={fifoSnap?fifoSnap:null} type="ALL" search=""/>):null}
+                            {this.state.agrandir==="comptabilisation"?(<AfterComptaTableZoom opCompta={opCompta} isFull={isFull} type={filtreInv}/>):this.state.agrandir==="inventaire"?(<AfterComptaInvZoom fifoSnap={fifoSnap?fifoSnap:null} type="ALL" search=""/>):null}
                     </Dialog>
                 <div className="contentWrapper fadeInUp animated">
                     <Toolbar style={style.toolbar}>
@@ -139,7 +180,14 @@ class AfterCompta extends Component {
                             hoverColor="#cd9a2e" 
                             className="icono"
                             title="Aller a l'accueil"
-                            onClick={()=>FlowRouter.go('dashboard')}
+                            onClick={()=>{
+                                this.setState({
+                                    dtitle:"Quitter la page ?",
+                                    dmessage:"Vous vous appretez à quitter la page de comptabilisation. En êtes vous sur ?"
+                                });
+                                
+                                this._dialogOpen();
+                            }}
                             />
                         </ToolbarGroup>
                         <ToolbarGroup>
@@ -198,6 +246,7 @@ AfterCompta=connect(
      fifoSnap:state.inventaire.inventaireSnap,
       opCompta:state.releveDuJour.isFull?state.releveDuJour.resultatComptaFull:state.releveDuJour.resultatComptaSimple,
       isFull:state.releveDuJour.isFull,
+      filtreInv:state.inventaire.filter,
       dispatch
     }
   }

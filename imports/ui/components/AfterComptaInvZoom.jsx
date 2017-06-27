@@ -20,7 +20,7 @@ import {Meteor} from 'meteor/meteor';
 import {Inventaire} from '../../api/collections.js';
 import {createContainer} from 'meteor/react-meteor-data';
 import {formatNumberInMoney} from '../../utils/utils.js';
-
+const R= require('ramda');
 import {$} from 'meteor/jquery';
 
 const ITEMS_PER_PAGE=10;
@@ -31,6 +31,7 @@ class AfterComptaInvZoom extends Component{
             super();
             this.state={
                 dialogIsOpen:false,
+                filtre:"ALL",
                 errorMsg:'',
                 showFIFOSnap:false,
                 selectedRows:[],
@@ -55,6 +56,18 @@ class AfterComptaInvZoom extends Component{
         }
         componentDidMount(){
            // $('.tableau').parent().css("width","2646px");
+           $('#ALL').click(()=>{
+               this.setState({filtre:"ALL"});
+           });
+           $('#AAC').click(()=>{
+               this.setState({filtre:"AC"});
+           });
+           $('#VACMV').click(()=>{
+               this.setState({filtre:"MV"});
+           });
+           $('#VACPV').click(()=>{
+               this.setState({filtre:"PV"});
+           });
         }
 
         _dialogOpen(){
@@ -127,28 +140,28 @@ console.dir(this.props);
                     <hr/>
                     <div className="inventfilters animated zoomInDown">
                     <div className="filters ">
-                        <div className="fintern ">
+                        <div className="fintern " id="ALL">
                         <p>Tout affich&eacute;</p>
                         </div>      
                     </div>
                     {numbAAC!=0?(<div className="filters ">
-                        <div className="fintern lightbluebak">
+                        <div className="fintern lightbluebak" id="AAC">
                         <p>{`${numbAAC} Achat d'action`}</p>
                         </div>
                     </div>):null}
                     {numbVAC!=0?(<div className="filters ">
-                        <div className="fintern lightbluebak">
+                        <div className="fintern yellowbak" id="VAC">
                         <p>{`${numbVAC} Achat d'action`}</p>
                         </div>
                     </div>):null}
                     {numbVACPV!=0?(<div className="filters ">
-                        <div className="fintern greenbak">
+                        <div className="fintern greenbak" id="VACPV">
                         <p>{`${numbVACPV} plus value de cession`}</p>
                         </div>
                         
                     </div>):null}
                     {numbVACMV!=0?(<div className="filters ">
-                        <div className="fintern orangebak">
+                        <div className="fintern orangebak" id="VACMV">
                         <p>{`${numbVACMV} moins value de cession`}</p>
                         </div>
                     </div>):null}
@@ -203,8 +216,8 @@ console.dir(this.props);
                                                 <TableRowColumn title={row.DateAcquisition}>{row.DateAcquisition}</TableRowColumn>
                                                 <TableRowColumn title={row.Valeur}>{row.Valeur}</TableRowColumn>
                                                 <TableRowColumn title={row.Quantite}>{row.Quantite}</TableRowColumn>
-                                                <TableRowColumn title={row.PrixUnitaire}>{row.PrixUnitaire}</TableRowColumn>
-                                                <TableRowColumn title={row.ValBilan}>{row.ValBilan}</TableRowColumn>
+                                                <TableRowColumn title={formatNumberInMoney(row.PrixUnitaire)}>{formatNumberInMoney(row.PrixUnitaire)}</TableRowColumn>
+                                                <TableRowColumn title={formatNumberInMoney(row.ValBilan)}>{formatNumberInMoney(row.ValBilan)}</TableRowColumn>
                                                <TableRowColumn title={row.Symbole}>{row.Symbole}</TableRowColumn>
                                                <TableRowColumn title={row.reference}>{row.reference}</TableRowColumn> 
                                             </TableRow>);
@@ -214,7 +227,7 @@ console.dir(this.props);
                                                 Aucun élément dans linventaire<br/>veuillez re faire une integration    
                                                     </div>
                                                </TableRowColumn>
-                                            </TableRow>:typeof inventaire!=='undefined'?inventaire.map((row,index,arr)=>{
+                                            </TableRow>:this.state.filtre==="ALL"?typeof inventaire!=='undefined'?inventaire.map((row,index,arr)=>{
                                                 let classo="animated bounceInright ";
                                                 let classy="";
                                                 let val;
@@ -248,7 +261,38 @@ console.dir(this.props);
                                                 Aucun élément dans linventaire<br/>veuillez re faire une integration    
                                                     </div>
                                                </TableRowColumn>
-                                            </TableRow>
+                                            </TableRow>:this.state.filtre==="MV"?R.filter(R.where({'lastTypeOp':R.contains("VACMV")}))(inventaire).map((row,index,arr)=>{
+                                                return(<TableRow key={index} className="animated bounceInright orangebak" selected={this.state.selectedRows.indexOf(index)!==-1} ref={`user${index}`}>
+                                                                    <TableRowColumn title="">{index+1}</TableRowColumn>
+                                                                    <TableRowColumn title={row.DateAcquisition}>{row.DateAcquisition}</TableRowColumn>
+                                                                    <TableRowColumn title={row.Valeur}>{row.Valeur}</TableRowColumn>
+                                                                    <TableRowColumn title={row.Quantite}>{row.Quantite}</TableRowColumn>
+                                                                    <TableRowColumn title={formatNumberInMoney(row.PrixUnitaire)}>{formatNumberInMoney(row.PrixUnitaire)}</TableRowColumn>
+                                                                    <TableRowColumn title={formatNumberInMoney(row.ValBilan)}>{formatNumberInMoney(row.ValBilan)}</TableRowColumn>
+                                                                    <TableRowColumn title={row.Symbole}>{row.Symbole}</TableRowColumn>
+                                                                    <TableRowColumn title={row.reference}>{row.reference}</TableRowColumn> 
+                                                                </TableRow>);
+                                            }):this.state.filtre==="PV"?R.filter(R.where({'lastTypeOp':R.contains("VACPV")}))(inventaire).map((row,index,arr)=>{
+                                                return(<TableRow key={index} className="animated bounceInright greenbak" selected={this.state.selectedRows.indexOf(index)!==-1} ref={`user${index}`}>
+                                                                    <TableRowColumn title="">{index+1}</TableRowColumn>
+                                                                    <TableRowColumn title={row.DateAcquisition}>{row.DateAcquisition}</TableRowColumn>
+                                                                    <TableRowColumn title={row.Valeur}>{row.Valeur}</TableRowColumn>
+                                                                    <TableRowColumn title={row.Quantite}>{row.Quantite}</TableRowColumn>
+                                                                    <TableRowColumn title={formatNumberInMoney(row.PrixUnitaire)}>{formatNumberInMoney(row.PrixUnitaire)}</TableRowColumn>
+                                                                    <TableRowColumn title={formatNumberInMoney(row.ValBilan)}>{formatNumberInMoney(row.ValBilan)}</TableRowColumn>
+                                                                    <TableRowColumn title={row.Symbole}>{row.Symbole}</TableRowColumn>
+                                                                    <TableRowColumn title={row.reference}>{row.reference}</TableRowColumn> 
+                                                                </TableRow>);}):this.state.filtre==="AC"?R.filter(R.where({'lastTypeOp':R.contains("AAC")}))(inventaire).map((row,index,arr)=>{
+                                                return(<TableRow key={index} className="animated bounceInright lightbluebak" selected={this.state.selectedRows.indexOf(index)!==-1} ref={`user${index}`}>
+                                                                    <TableRowColumn title="">{index+1}</TableRowColumn>
+                                                                    <TableRowColumn title={row.DateAcquisition}>{row.DateAcquisition}</TableRowColumn>
+                                                                    <TableRowColumn title={row.Valeur}>{row.Valeur}</TableRowColumn>
+                                                                    <TableRowColumn title={row.Quantite}>{row.Quantite}</TableRowColumn>
+                                                                    <TableRowColumn title={formatNumberInMoney(row.PrixUnitaire)}>{formatNumberInMoney(row.PrixUnitaire)}</TableRowColumn>
+                                                                    <TableRowColumn title={formatNumberInMoney(row.ValBilan)}>{formatNumberInMoney(row.ValBilan)}</TableRowColumn>
+                                                                    <TableRowColumn title={row.Symbole}>{row.Symbole}</TableRowColumn>
+                                                                    <TableRowColumn title={row.reference}>{row.reference}</TableRowColumn> 
+                                                                </TableRow>);}):null
                                         
                         }
                         </TableBody>

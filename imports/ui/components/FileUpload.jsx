@@ -145,8 +145,10 @@ const styles={
                         if(rel.legnth||rel!=undefined){
                             let arrSym=[],invArr=[];
                             rel.map((e)=>{
-                                if(e.CODE_OPERATION="T200")
-                                arrSym.push({symbole:e.SYMBOLE,qte:e.QUANTITE});
+                                if(e.CODE_OPERATION==="T200"){
+                                     arrSym.push({symbole:e.SYMBOLE,qte:e.QUANTITE});
+                                }
+                               
                             });
                             invArr=Inventaire.find().fetch();
                             if(invArr.length<0){
@@ -162,13 +164,14 @@ const styles={
                             invArr=groupSumBySymbole(invArr,["Symbole"],["Quantite"]);
                             //alert("arrSym/"+JSON.stringify(arrSym));
                             //alert("invArr/"+JSON.stringify(invArr));
-                            arrSym.forEach((e)=>{
+                           if(arrSym!=undefined && arrSym.length>0){ 
+                               arrSym.forEach((e)=>{
                                 let inv=R.filter(R.where({'Symbole':R.contains(e.symbole)}))(invArr);
                                 if(e.qte>inv[0].Quantite){
                                     this.setState({
                                         error:true,
                                         showLoader:false,
-                                        errorMsg:`Le relevé indique que l'opération de cession d'action ${inv[0].Valeur} a une quantité supérieure (${e.qte}) à celle présente dans le stock (${inv[0].Quantite}).Veuillez fournir un relevé valide.`
+                                        errorMsg:`Le relevé indique que l'opération de cession d'action ${inv[0].Valeur} a une quantité supérieure (${e.qte}) à celle présente dans le stock (${inv[0].Quantite}). Serait ce dû à un fractionnement non pris en compte ? Veuillez re-vérifier le relevé.`
                                     });
                                     this._dialogOpen();
                                 }else{
@@ -182,6 +185,15 @@ const styles={
                                 }
                                 //alert(JSON.stringify(inv));
                             });
+                        }else{
+                            this.setState({
+                                        error:false,
+                                        showLoader:true,
+                                        errorMsg:`Veuillez patienter pendant que le processus comptabilisation s'exécute...`
+                                    });
+                                    this._dialogOpen();
+                                    dispatch(releverOk());
+                        }
                             
                         }else{
                             this.setState({

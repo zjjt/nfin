@@ -31,19 +31,19 @@ Array.prototype.groupBy=function(prop){
 
 function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi un array d'objet avec la plus ou moins value
      //FIFO on verifie que cette ligne n'existe pas deja dans l'inventaire si elle existe on skip
-                            console.log("=====tableauRes au debut de la fonction comptaMVPV========")
-                            console.log(tableauRes.length);
-                            console.log(tableauRes);
-                            console.log("=====tableauRes au debut de la fonction comptaMVPV========")
+                           // console.log("=====tableauRes au debut de la fonction comptaMVPV========")
+                            //console.log(tableauRes.length);
+                            //console.log(tableauRes);
+                            //console.log("=====tableauRes au debut de la fonction comptaMVPV========")
                             let temp={};
                             let mvpv={};
                            let dateAchatFormatted=transformInFrenchDate(e.DATE_ACHAT_DES_TITRES);
-                           console.log("===== Date Achat en francais vente d'action "+dateAchatFormatted);
+                           //console.log("===== Date Achat en francais vente d'action "+dateAchatFormatted);
                            let existInFIFO=Inventaire.findOne({Symbole:e.SYMBOLE});
                            if(existInFIFO){
                               //si l'action existe dans l'inventaire on verifie la premiere occurence de l'action dans l'inventaire
                                console.log("Le voila premier objet trouver pour la vente d'action symbole= " +e.SYMBOLE+" est: ");
-                               console.log(existInFIFO);
+                               //console.log(existInFIFO);
                                 console.log("la quantite restante en stock est "+quantiteRestante);
                                /**Procedure vente d'actions
                                 * 1-determiner si il ya moins value 
@@ -53,15 +53,15 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                     let newQteEnStockDuPremierTrouver;
                                     if(quantiteRestante===0){
                                         newQteEnStockDuPremierTrouver=existInFIFO.Quantite-e.QUANTITE;
-                                        console.log("1newQteEnStockDuPremierTrouver: "+newQteEnStockDuPremierTrouver);
+                                        console.log("1newQteEnStockDuPremierTrouverMV: "+existInFIFO.Quantite+"-"+e.QUANTITE+"="+newQteEnStockDuPremierTrouver);
                                     }else if(quantiteRestante>0){
                                        
                                         newQteEnStockDuPremierTrouver=existInFIFO.Quantite-quantiteRestante;
-                                        console.log("2newQteEnStockDuPremierTrouver: "+newQteEnStockDuPremierTrouver);
+                                        console.log("2newQteEnStockDuPremierTrouver: "+existInFIFO.Quantite+"-"+quantiteRestante+"="+newQteEnStockDuPremierTrouver);
                                     }
                                     
                                     if(newQteEnStockDuPremierTrouver>0){
-                                        console.log("moins value et newQte superieur a 0");
+                                        console.log("moins value et newQte superieur a >0");
                                         let montantMV=quantiteRestante>0?(existInFIFO.PrixUnitaire-e.PRIX_UNITAIRE)*quantiteRestante : (existInFIFO.PrixUnitaire-e.PRIX_UNITAIRE)*e.QUANTITE;
                                         Inventaire.update(existInFIFO,{
                                             $set:{
@@ -109,7 +109,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                         
                                         tableauRes.push({temp,mvpv});
                                         console.log("content of tableauRes avant return======");
-                                        console.log(tableauRes);
+                                        //console.log(tableauRes);
                                         tableauRes.forEach((e)=>pvmvTemp.push(e));
                                         //return tableauRes;
                                         
@@ -163,6 +163,62 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                             }
                                         
 
+                                    }else if(newQteEnStockDuPremierTrouver===0){
+                                       // console.log("MV avec QTE===0");
+                                        //enlever la ligne dont la quantite est epuisee
+                                        let montantMV=(existInFIFO.PrixUnitaire-e.PRIX_UNITAIRE)*existInFIFO.Quantite;
+                                        //console.log("MontantMV:"+montantMV);
+                                        //console.dir(existInFIFO);
+                                        Inventaire.remove(existInFIFO,()=>{
+                                            //on comptabilise la moins value et la sortie de stock(vente)
+                                            
+                                        });
+                                         //comptabilisation moins value
+                                            let compte=COMPTES.filter((obj)=>{
+                                                return obj.type==="AC"
+                                            });
+                                            compte=compte[0];
+                                            temp.compte=compte;
+                                            temp.libelle="Cession de "+existInFIFO.Quantite+" actions "+e.VALEUR+" au prix d'achat de "+existInFIFO.PrixUnitaire;
+                                            temp.libelleS="Cession de "+existInFIFO.Quantite+" actions "+e.VALEUR+" au prix d'achat de "+existInFIFO.PrixUnitaire;
+                                            temp.montant=existInFIFO.PrixUnitaire*existInFIFO.Quantite;
+                                            temp.symbole=e.SYMBOLE;
+                                            temp.ref=parseInt(e.REFERENCE);
+                                            temp.ou="C";
+                                            temp.qte=existInFIFO.Quantite;
+                                            temp.typeOp="VAC";
+                                            temp.indexOP=index;
+
+                                            compte=COMPTES.filter((obj)=>{
+                                                return obj.type==="MV"
+                                            });
+                                            compte=compte[0];
+                                            mvpv.compte=compte;
+                                            mvpv.libelle="Moins value sur cession de "+existInFIFO.Quantite+" actions "+e.VALEUR;
+                                            mvpv.libelleS="Moins value sur cession de "+existInFIFO.Quantite+" actions "+e.VALEUR;
+                                            mvpv.montant=montantMV;
+                                            mvpv.symbole=e.SYMBOLE;
+                                            mvpv.ref=parseInt(e.REFERENCE);
+                                            mvpv.ou="D";
+                                            mvpv.qte=existInFIFO.Quantite;
+                                            mvpv.typeOp="VAC";
+                                            mvpv.indexOP=index+1;
+
+                                            //on yield la valeur trouver
+                                            // console.log("longueur du tableau avant "+tableauRes.length);
+                                            // console.dir(temp);
+                                             //console.dir(mvpv);
+                                            tableauRes.push({temp,mvpv});
+                                            //console.log("tableaures");
+                                           // console.dir(tableauRes);
+                                         tableauRes.forEach((e)=>pvmvTemp.push(e));
+                                            //on check si on a encore ce type de valeur en stock
+                                          //  existInFIFO=Inventaire.findOne({Symbole:e.SYMBOLE});
+                                           // if(existInFIFO){
+                                           //     comptaMVPV(e,index++,Math.abs(newQteEnStockDuPremierTrouver),pvmvTemp,tableauRes);
+                                           // }
+                                        
+
                                     }
                                     
                                 }else if(e.PRIX_UNITAIRE>existInFIFO.PrixUnitaire){
@@ -170,11 +226,11 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                     let newQteEnStockDuPremierTrouver;
                                     if(quantiteRestante===0){
                                         newQteEnStockDuPremierTrouver=existInFIFO.Quantite-e.QUANTITE;
-                                        console.log("1newQteEnStockDuPremierTrouver: "+newQteEnStockDuPremierTrouver);
+                                        console.log("1newQteEnStockDuPremierTrouverPV: "+existInFIFO.Quantite+"-"+e.QUANTITE+"="+newQteEnStockDuPremierTrouver);
                                     }else if(quantiteRestante>0){
                                        
                                         newQteEnStockDuPremierTrouver=existInFIFO.Quantite-quantiteRestante;
-                                        console.log("2newQteEnStockDuPremierTrouver: "+newQteEnStockDuPremierTrouver);
+                                        console.log("2newQteEnStockDuPremierTrouverPV: "+existInFIFO.Quantite+"-"+quantiteRestante+"="+newQteEnStockDuPremierTrouver);
                                     }
                                     
                                     if(newQteEnStockDuPremierTrouver>0){
@@ -226,7 +282,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                         
                                         tableauRes.push({temp,mvpv});
                                         console.log("content of tableauRes avant return======");
-                                        console.log(tableauRes);
+                                        //console.log(tableauRes);
                                         tableauRes.forEach((e)=>pvmvTemp.push(e));
                                         //return tableauRes;
                                         
@@ -278,6 +334,55 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                             if(existInFIFO){
                                                 comptaMVPV(e,index++,Math.abs(newQteEnStockDuPremierTrouver),pvmvTemp,tableauRes);
                                             }
+                                        
+
+                                    }else if(newQteEnStockDuPremierTrouver===0){
+                                        //enlever la ligne dont la quantite est epuisee
+                                        let montantPV=(e.PRIX_UNITAIRE-existInFIFO.PrixUnitaire)*existInFIFO.Quantite;
+                                        Inventaire.remove(existInFIFO,()=>{
+                                            //on comptabilise la moins value et la sortie de stock(vente)
+                                            
+                                        });
+                                         //comptabilisation moins value
+                                            let compte=COMPTES.filter((obj)=>{
+                                                return obj.type==="AC"
+                                            });
+                                            compte=compte[0];
+                                            temp.compte=compte;
+                                            temp.libelle="Cession de "+existInFIFO.Quantite+" actions "+e.VALEUR+" au prix d'achat de "+existInFIFO.PrixUnitaire;
+                                            temp.libelleS="Cession de "+existInFIFO.Quantite+" actions "+e.VALEUR+" au prix d'achat de "+existInFIFO.PrixUnitaire;
+                                            temp.montant=existInFIFO.PrixUnitaire*existInFIFO.Quantite;
+                                            temp.symbole=e.SYMBOLE;
+                                            temp.ref=parseInt(e.REFERENCE);
+                                            temp.ou="C";
+                                            temp.qte=existInFIFO.Quantite;
+                                            temp.typeOp="VAC";
+                                            temp.indexOP=index;
+
+                                            compte=COMPTES.filter((obj)=>{
+                                                return obj.type==="PV"
+                                            });
+                                            compte=compte[0];
+                                            mvpv.compte=compte;
+                                            mvpv.libelle="Plus value sur cession de "+existInFIFO.Quantite+" actions "+e.VALEUR;
+                                            mvpv.libelleS="Plus value sur cession de "+existInFIFO.Quantite+" actions "+e.VALEUR;
+                                            mvpv.montant=montantPV;
+                                            mvpv.symbole=e.SYMBOLE;
+                                            mvpv.ref=parseInt(e.REFERENCE);
+                                            mvpv.ou="C";
+                                            mvpv.qte=existInFIFO.Quantite;
+                                            mvpv.typeOp="VAC";
+                                            mvpv.indexOP=index+1;
+
+                                            //on yield la valeur trouver
+                                             console.log("longueur du tableau avant "+tableauRes.length);
+                                            tableauRes.push({temp,mvpv});
+                                          tableauRes.forEach((e)=>pvmvTemp.push(e));
+                                            //on check si on a encore ce type de valeur en stock
+                                           // existInFIFO=Inventaire.findOne({Symbole:e.SYMBOLE});
+                                           // if(existInFIFO){
+                                             //   comptaMVPV(e,index++,Math.abs(newQteEnStockDuPremierTrouver),pvmvTemp,tableauRes);
+                                           // }
                                         
 
                                     }
@@ -866,6 +971,9 @@ export default ()=>{
                 return true;
             }
            });
+        },
+        chargeInvWithSnap(fifosnap){
+            fifosnap.map((e)=>Inventaire.insert(e));
         },
         getInventoryCount(){
             return Inventaire.find({}).count();
