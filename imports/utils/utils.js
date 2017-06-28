@@ -15,7 +15,12 @@ let transformInFrenchDate=(e)=>{
     let date=`${day}/${mois}/${year}`;
     return date;
 };
-
+let convertInDateObjFromFrenchDate=(e)=>{
+    let day=e.substring(0,2);
+    let mois=e.substring(3,5);
+    let year=e.substring(6);
+    return new Date(year,mois,day);
+};
 let formatNumberInMoney=(x)=>{
     let parts=x.toString().split(".");
     parts[0]=parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,",");
@@ -70,4 +75,4 @@ const groupSumBySymbole=(arr,propAgrouper,propAsum)=>{
     arr.forEach(processRecord);
     return ([...newArray.values()]);
 }
-export {transformInFrenchDate,formatNumberInMoney,groupByLibel,groupSumBySymbole};
+export {transformInFrenchDate,formatNumberInMoney,groupByLibel,groupSumBySymbole,convertInDateObjFromFrenchDate};

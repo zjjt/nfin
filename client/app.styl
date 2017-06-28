@@ -74,7 +74,28 @@ footer
       p
         font-size 10px
         font-weight bold
-
+.VerticalSeparatorLong
+  width 100%
+  background-color #999999
+  position relative
+  min-height 50px
+  &:before
+    left -25px
+  &:after
+    right -25px
+  &:after,&:before
+    content ""
+    background-color #999999
+    min-height 50px
+    position absolute
+    width 25px
+.justLoader
+  border 1px solid green
+  height 200px
+  display flex
+  flex-direction row
+  justify-content center
+  align-items center
 .twoWindows
   display flex
   flex-direction row
@@ -128,7 +149,11 @@ footer
   display flex
   justify-content flex-end
   margin-top 6%
- 
+
+.inAppBtnDivMiddle
+  display flex
+  justify-content center
+  margin-top 6%
 
 .formDiv
   padding-left 30px
@@ -152,6 +177,10 @@ footer
   display flex
   flex-direction column
   flex-grow 2
+.innerFormDiv
+  overflow hidden
+  padding-left 10px
+  padding-right 10px   
 .centeredContentSingle
   width 100%
   min-height 600px
@@ -186,18 +215,17 @@ footer
   justify-content center
   align-items center
   .fracDiv
-    width 80%;
+    width 40%;
     min-height 200px
     height 600px
     margin auto
     background-color white
     display flex
     flex-direction column
-    justify-content center
-    align-items center
-    
+    .formDiv
+      flex-grow 2 
   .loginDiv
-    width 40%;
+    width 40%
     min-height 200px
     margin auto
     background-color white
@@ -235,7 +263,7 @@ footer
   display flex
   justify-content center
 
- 
+
 .masterContainer
   width:100%
   min-height 900px

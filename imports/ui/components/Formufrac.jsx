@@ -63,66 +63,29 @@ import {$} from 'meteor/jquery';
    render(){
        const {handleSubmit,pristine,submitting,dispatch,reset}=this.props;
        const submit=(values,dispatch)=>{
-            if(values.nom===''||!values.nom){
+            if(values.valeur===''||!values.valeur){
                 this.setState({
-                    errorMsg:"Le champs nom d'utilisateur ne peut être vide."
+                    errorMsg:"Veuillez à sélectionner une valeur mobilière"
                 });
                 this._dialogOpen();
-            }
-            else if(values.prenom===''||!values.prenom){
-                this.setState({
-                    errorMsg:"Le champs prénoms de l'utilisateur ne peut être vide."
+            }else if(values.date_debut_frac===''||!values.date_debut_frac){
+               this.setState({
+                    errorMsg:"Veuillez à fournir une date de fractionnement"
                 });
-                this._dialogOpen();
-            }
-             else if(values.username===''||!values.username){
-                this.setState({
-                    errorMsg:"Le champs username de l'utilisateur ne peut être vide."
-                });
-                this._dialogOpen();
-            }
-            else if(values.password===''||!values.password){
-                this.setState({
-                    errorMsg:"Le champs mot de passe ne peut être vide."
-                });
-                this._dialogOpen();
-            }
-            else if(values.passwordconf===''||!values.passwordconf){
-                this.setState({
-                    errorMsg:"Le champs confirmation du mot de passe ne peut être vide."
-                });
-                this._dialogOpen();
-            }
-            else if(values.password!==values.passwordconf){
-                this.setState({
-                    errorMsg:"Les champs mot de passe et confirmation du mot de passe ne correspondent pas."
-                });
-                this._dialogOpen();
-            }
-            else if(values.codeRedac===''||!values.codeRedac){
-                this.setState({
-                    errorMsg:"Le champs code redacteur ne peut être vide."
-                });
-                this._dialogOpen();
-            }
-            else if(values.role===''||!values.role){
-                this.setState({
-                    errorMsg:"Veuillez donner un rôle à cet utilisateur."
-                });
-                this._dialogOpen();
-            }
+                this._dialogOpen(); 
+            }           
             else{
                //alert(JSON.stringify(values));
                 Meteor.call('updateFraction',values,(err)=>{
                     if(err){
                         this.setState({
-                            errorMsg:"Une erreur s'est produite lors de la creation de l'utilisateur. "+err.reason+". Veuillez re vérifier, il se pourrait que le code rédacteur existe déja"
+                            errorMsg:err.reason
                             });
                         this._dialogOpen();
                     }else{
                         reset();
                         this.setState({
-                        snackMsg:`L'utilisateur ${values.username} a été créé`,
+                        snackMsg:`La valeur ${values.username} a été fractionnée`,
                         snackOpen:true
                         });
                     }
@@ -136,15 +99,16 @@ import {$} from 'meteor/jquery';
         const required = value => value ? undefined : 'Required';
         const inventaire=groupSumBySymbole(Inventaire.find().fetch(),['Symbole'],['Quantite']);
 
-    return(<div className="fracDiv">
-    <form onSubmit={handleSubmit(submit)}>
-                 
+    return(
+    <form  className="" style={{}} onSubmit={handleSubmit(submit)}>
+       <div className="innerFormDiv">          
                 <Field
                     name="valeur" 
                     component={SelectField}
                     floatingLabelText="Valeur mobilière dans l'inventaire"
                     hintText="Valeur mobilière"
                     floatingLabelFixed={true}
+                    fullWidth={true}
                     //validate={[required]}
                     value={this.props.valeur}
                 >{
@@ -158,7 +122,6 @@ import {$} from 'meteor/jquery';
                             DateTimeFormat={DateTimeFormat}
                             className="datepicker"
                             component={DatePicker}
-                            hintText="Entrez la date de début de la période de fractionnement"
                             floatingLabelText="Date de début de la période de fractionnement"
                             fullWidth={true}
                             okLabel="OK"
@@ -171,37 +134,25 @@ import {$} from 'meteor/jquery';
                             }}
                             floatingLabelFixed={true}
                         />
-                <Field
-                            name="date_fin_frac" 
-                            DateTimeFormat={DateTimeFormat}
-                            className="datepicker"
-                            component={DatePicker}
-                            hintText="Entrez la date de fin de la période de fractionnement"
-                            floatingLabelText="Date de fin de la période de fractionnement"
-                            fullWidth={true}
-                            okLabel="OK"
-                            cancelLabel="Annuler"
-                            locale="fr"
-                            format={(value,name)=>{
-                                console.log('value being passed ',value);
-                                console.log('is of type',typeof value);
-                                return value===''?null:value;
-                            }}
-                            floatingLabelFixed={true}
-                        />
+               
 
-                <div className="inAppBtnDiv">
+                <div className="inAppBtnDivMiddle" style={{}}>
                     <RaisedButton
                         label="Ajouter le fractionnement" 
                         labelColor="white"
-                        backgroundColor="gray"
+                        backgroundColor="#cd9a2e"
                         className="inAppBtnForm"
                         type="submit"
                     />
+                    <br/>>
                 </div>
-                
+                <div className="VerticalSeparatorLong"></div>
+                <div className="justLoader">
+                    <CircularProgress size={60} thickness={7}/>
+                </div>
+            </div>    
                </form>
-    </div>);
+    );
    }
  }
 

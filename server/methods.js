@@ -7,7 +7,7 @@ import Excel from 'exceljs';
 import LineByLineReader from 'line-by-line';
 import {TempReleve,SGI,ComptesFinanciers,FichiersInv,Inventaire} from '../imports/api/collections.js';
 import Future from 'fibers/future';
-import {transformInFrenchDate,groupByLibel} from '../imports/utils/utils.js';
+import {transformInFrenchDate,groupByLibel,convertInDateObjFromFrenchDate} from '../imports/utils/utils.js';
 //import {Baby} from 'meteor/modweb:baby-parse';
 import Baby from 'babyparse';
 import {check} from 'meteor/check';
@@ -393,6 +393,12 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
 }
 export default ()=>{
     Meteor.methods({
+        updateFraction(values){
+            //on recupere les champs concernes pour effectuer le fractionnement
+            
+            let valeursInv=Inventaire.find({}).fetch();
+
+        },
         checkAdminUser(username,mdp){
             if(username===Meteor.settings.ADMINLOGMDP && mdp===Meteor.settings.ADMINLOGMDP)
             return true;

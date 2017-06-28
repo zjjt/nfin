@@ -34,7 +34,7 @@ class FormuFractionnement extends Component {
     }
     render(){
         return(<div className="centeredContent">
-                <div className="loginDiv zoomIn animated">
+                <div className="fracDiv zoomIn animated">
                     <AppBar
                         title="Modification des taux de fractionnement"
                         style={{backgroundColor: '#212f68'}}
