@@ -21,11 +21,11 @@ import {FichiersInv,Inventaire,ComptesFinanciers} from '../../api/collections.js
 import {Session} from 'meteor/session';
 
 injectTapEventPlugin();
-FlowRouter.route('/dashboard',{
+FlowRouter.route('/',{
 	name:'home',
 	triggersEnter:[(context,redirect)=>{
 		if(Meteor.user()){
-			redirect('/dashboard');
+			redirect('/');
 		}
 	}],
 	action(){
