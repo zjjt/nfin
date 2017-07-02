@@ -32,7 +32,7 @@ import {Session} from 'meteor/session';
                 return(<div className="centeredContent">
                             <div className="cardMenu " >
                              <div className="cardContainer fadeInRight animated">
-                                <Card className="cards" onClick={()=>FlowRouter.go('excel')}>
+                                <Card className="cards" onClick={()=>FlowRouter.go('wallet')}>
                                     <CardHeader 
                                         title="Inventaire des titres financiers"
                                         className="cardsHeader" 

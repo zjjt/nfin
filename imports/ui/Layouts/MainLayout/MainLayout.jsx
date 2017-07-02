@@ -101,8 +101,8 @@ export default class MainLayout extends Component{
 						<AppBar
 							title="Gestion du portefeuille des titres NSIA VIE ASSURANCES"
 							style={{backgroundColor:'#cd9a2e' }}
-							onTitleTouchTap={()=>{FlowRouter.go('home')}}
-							iconStyleLeft={!Meteor.user()?{display:'none'}:{}}
+							onTitleTouchTap={()=>{FlowRouter.current().route.name=="report"?null:FlowRouter.go('home')}}
+							iconStyleLeft={!Meteor.user()||FlowRouter.current().route.name=="report"?{display:'none'}:{}}
 							onLeftIconButtonTouchTap={()=>this.handleToggle()}
 							iconElementRight={store.getState().administrateurAction.adminConnected||Meteor.user()?<Logged/>:<Bienvenue/>}
 						/>
@@ -134,9 +134,7 @@ export default class MainLayout extends Component{
 							<MenuItem style={{color:'white',backgroundColor:'#1f2d67'}}>Administration</MenuItem>
 							<MenuItem onTouchTap={()=>{FlowRouter.go('fracform');
 							this.handleClose();}}>Edition des taux de fractionnement</MenuItem>
-							<MenuItem onTouchTap={()=>{FlowRouter.go('histo');
-							this.handleClose();}}>Edition des SGI</MenuItem>
-							<MenuItem onTouchTap={()=>{FlowRouter.go('histo');
+							<MenuItem onTouchTap={()=>{FlowRouter.go('modcomptefin');
 							this.handleClose();}}>Edition des comptes financiers</MenuItem>
 							
 							

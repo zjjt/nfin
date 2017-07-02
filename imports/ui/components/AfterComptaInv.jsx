@@ -5,6 +5,7 @@ import RaisedButton from 'material-ui/RaisedButton';
 import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 import { connect } from 'react-redux';
+import {moment} from 'meteor/momentjs:moment';
 import {Field,reduxForm,formValueSelector,submit} from 'redux-form';
 import {TextField,DatePicker,SelectField} from 'redux-form-material-ui';
 import Home from 'material-ui/svg-icons/action/home';
@@ -165,7 +166,7 @@ console.dir(this.props);
                                            ):this.state.showFIFOSnap?typeof fifoSnap!=='undefined'?fifoSnap.map((row,index)=>{
                                             return(<TableRow key={index} className="animated bounceInLeft" selected={this.state.selectedRows.indexOf(index)!==-1} ref={`user${index}`}>
                                                <TableRowColumn title="">{index+1}</TableRowColumn>
-                                                <TableRowColumn title={row.DateAcquisition}>{row.DateAcquisition}</TableRowColumn>
+                                                <TableRowColumn title={moment(row.DateAcquisition).format("DD/MM/YYYY")}>{moment(row.DateAcquisition).format("DD/MM/YYYY")}</TableRowColumn>
                                                 <TableRowColumn title={row.Valeur}>{row.Valeur}</TableRowColumn>
                                                 <TableRowColumn title={row.Quantite}>{row.Quantite}</TableRowColumn>
                                                 <TableRowColumn title={formatNumberInMoney(row.PrixUnitaire)}>{formatNumberInMoney(row.PrixUnitaire)}</TableRowColumn>
@@ -195,7 +196,7 @@ console.dir(this.props);
                                                         }
                                                          val=(<TableRow key={index} className={classo+classy} selected={this.state.selectedRows.indexOf(index)!==-1} ref={`user${index}`}>
                                                                     <TableRowColumn title="">{index+1}</TableRowColumn>
-                                                                    <TableRowColumn title={row.DateAcquisition}>{row.DateAcquisition}</TableRowColumn>
+                                                                    <TableRowColumn title={moment(row.DateAcquisition).format("DD/MM/YYYY")}>{moment(row.DateAcquisition).format("DD/MM/YYYY")}</TableRowColumn>
                                                                     <TableRowColumn title={row.Valeur}>{row.Valeur}</TableRowColumn>
                                                                     <TableRowColumn title={row.Quantite}>{row.Quantite}</TableRowColumn>
                                                                     <TableRowColumn title={row.PrixUnitaire}>{row.PrixUnitaire}</TableRowColumn>

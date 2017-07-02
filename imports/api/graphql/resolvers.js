@@ -32,19 +32,19 @@ const resolvers={
                 return Inventaire.find({type:"ACTIONS"}).fetch();
             }else if(args.type==="A" && (args.search||args.search!=="")) {
                 Inventaire.remove({DateAcquisition:""});
-                return Inventaire.find({type:"ACTIONS",Valeur:{$regex:args.search}}).fetch();
+                return Inventaire.find({type:"ACTIONS",Valeur:{$regex:args.search.toUpperCase()}}).fetch();
             }else if(args.type==="O" && (!args.search||args.search==="")) {
                 Inventaire.remove({DateAcquisition:""});
                 return Inventaire.find({type:"OBLIGATIONS"}).fetch();
             }else if(args.type==="O" && (args.search||args.search!=="")) {
                 Inventaire.remove({DateAcquisition:""});
-                return Inventaire.find({type:"OBLIGATIONS",Valeur:{$regex:args.search}}).fetch();
+                return Inventaire.find({type:"OBLIGATIONS",Valeur:{$regex:args.search.toUpperCase()}}).fetch();
             }else if(args.type==="ALL" && (!args.search||args.search==="")) {
                 Inventaire.remove({DateAcquisition:""});
                 return Inventaire.find({}).fetch();
             }else if(args.type==="ALL" && (args.search||args.search!=="")) {
                 Inventaire.remove({DateAcquisition:""});
-                return Inventaire.find({Valeur:{$regex:args.search}}).fetch();
+                return Inventaire.find({Valeur:{$regex:args.search.toUpperCase()}}).fetch();
             }
             
             /*if(args.type==="A" && (!args.search||args.search==="")){

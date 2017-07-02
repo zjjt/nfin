@@ -15,12 +15,13 @@ import CreateUser from '../../ui/containers/CreateUser.jsx';
 import AdminUserList from '../../ui/containers/AdminUserList.jsx';
 import FormuFractionnement from '../../ui/containers/FormuFractionnement.jsx'
 import Wallet from '../../ui/containers/Wallet.jsx';
+import ComptesFin from '../../ui/containers/ComptesFin.jsx';
 import injectTapEventPlugin from 'react-tap-event-plugin';
-import {FichiersInv,Inventaire} from '../../api/collections.js';
+import {FichiersInv,Inventaire,ComptesFinanciers} from '../../api/collections.js';
 import {Session} from 'meteor/session';
 
 injectTapEventPlugin();
-FlowRouter.route('/',{
+FlowRouter.route('/dashboard',{
 	name:'home',
 	triggersEnter:[(context,redirect)=>{
 		if(Meteor.user()){
@@ -33,18 +34,7 @@ FlowRouter.route('/',{
 	}
 });
 
-FlowRouter.route('/dashboard',{
-	name:'dashboard',
-	triggersEnter:[(context,redirect)=>{
-		if(!Meteor.user()){
-			redirect('/');
-		}
-	}],
-	action(){
-		mount(MainLayout,
-			{content:()=><Dashboard/>})
-	}
-});
+
 
 
 FlowRouter.route('/dashboard/fractionnement/',{
@@ -63,6 +53,25 @@ FlowRouter.route('/dashboard/fractionnement/',{
 	action(){
 		mount(MainLayout,
 			{content:()=><FormuFractionnement/>})
+	}
+});
+
+FlowRouter.route('/dashboard/comptes-financiers-modification/',{
+	name:'modcomptefin',
+	triggersEnter:[(context,redirect)=>{
+		let res=ComptesFinanciers.find().count();
+		if(!res){
+			if(!Meteor.user()){
+					redirect('/');
+				}else if(Meteor.user()){
+					alert("Aucune base de donnees des comptes financiers détecté !!!");
+					redirect('/dashboard/');
+				}
+		}
+	}],
+	action(){
+		mount(MainLayout,
+			{content:()=><ComptesFin/>})
 	}
 });
 

@@ -7,7 +7,7 @@ import Excel from 'exceljs';
 import LineByLineReader from 'line-by-line';
 import {TempReleve,SGI,ComptesFinanciers,FichiersInv,Inventaire} from '../imports/api/collections.js';
 import Future from 'fibers/future';
-import {transformInFrenchDate,groupByLibel,convertInDateObjFromFrenchDate} from '../imports/utils/utils.js';
+import {arrAreSame,transformInFrenchDate,groupByLibel,convertInDateObjFromFrenchDate} from '../imports/utils/utils.js';
 //import {Baby} from 'meteor/modweb:baby-parse';
 import Baby from 'babyparse';
 import {check} from 'meteor/check';
@@ -17,7 +17,7 @@ const R= require('ramda');
 const json2xls=require('json2xls');
 //const Excel=require('exceljs');
 let xlfile=process.env.PWD+'/FICHIERS/relevers/releveOp.xls';
-const COMPTES=ComptesFinanciers.find().fetch();
+
 
 
 Array.prototype.groupBy=function(prop){
@@ -37,7 +37,8 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                             //console.log("=====tableauRes au debut de la fonction comptaMVPV========")
                             let temp={};
                             let mvpv={};
-                           let dateAchatFormatted=transformInFrenchDate(e.DATE_ACHAT_DES_TITRES);
+                            let COMPTES=ComptesFinanciers.find().fetch();
+                           let dateAchatFormatted=convertInDateObjFromFrenchDate(transformInFrenchDate(e.DATE_ACHAT_DES_TITRES));
                            //console.log("===== Date Achat en francais vente d'action "+dateAchatFormatted);
                            let existInFIFO=Inventaire.findOne({Symbole:e.SYMBOLE});
                            if(existInFIFO){
@@ -393,10 +394,126 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
 }
 export default ()=>{
     Meteor.methods({
+
+        addToComptesFin(values){
+            ComptesFinanciers.insert({
+                type:values.type,
+                compte:values.compte,
+                libelle:values.libelle
+            });
+            let newone=ComptesFinanciers.findOne(values);
+            if(newone!=undefined){
+                return true;
+            }else{
+                throw new Meteor.Error("err","")
+            }
+        },
+        updateComptesFin(values){
+            if(typeof values!=undefined){
+                ComptesFinanciers.update({
+                    type:values.typeCompte,
+                },{
+                    $set:{
+                        compte:values.Compte
+                    }
+                });
+
+                return true;
+            }else{
+                throw new Meteor.Error("noVal","Aucune value fournie pour la mise a jour des CF");
+            }
+        },
+        cancelFrac(inv){
+            if(typeof inv!==undefined){
+                inv.map((e)=>{
+                    Inventaire.update({
+                        DateAcquisition:e.DateAcquisition,
+                        Symbole:e.Symbole,
+                        reference:e.reference
+                    },{
+                        $set:{
+                            Quantite:e.Quantite,
+                            PrixUnitaire:e.PrixUnitaire,
+                            IsFractionned:false
+                        }
+                    });
+
+                });
+                return{message:"Fractionnement annulé"};
+            }
+        },
         updateFraction(values){
             //on recupere les champs concernes pour effectuer le fractionnement
-            
-            let valeursInv=Inventaire.find({}).fetch();
+           
+            let valeursInv=Inventaire.find({
+                Symbole:values.valeur,
+                IsFractionned:false,
+                DateAcquisition:{
+                    $gte:values.date_debut_frac
+                }}).fetch();
+
+            let allActionsOld=Inventaire.find({
+                        Symbole:values.valeur,
+                        }).fetch(); 
+
+                if(valeursInv.length){
+                    let resultCheck=[];
+                    valeursInv.forEach((e)=>{
+                        console.dir(e);
+                        if(!e.IsFractionned){
+                            //calcul selon la formule de fractionnement
+
+                            let qte=e.Quantite*10;
+                            let pu=e.PrixUnitaire/10;
+                            //on met a jour la base de donnee avec l'element de fractionnement
+                           // console.log(pu);
+                            Inventaire.update(e,{
+                                $set:{
+                                    Quantite:qte,
+                                    PrixUnitaire:pu,
+                                    IsFractionned:false//a changer si elle dit que on ne peut fractionner kune seule fois
+                                }
+                            });
+                            
+                        }else{
+                            resultCheck.push(true);
+                        }
+                    });
+
+                    let allActionsNew=Inventaire.find({
+                        Symbole:values.valeur,
+                        }).fetch();
+
+                    let invAfterUp=Inventaire.find({
+                                    Symbole:values.valeur,
+                                    DateAcquisition:{
+                                        $gte:values.date_debut_frac
+                                    }}).fetch();
+
+                    
+                    //console.log("Invagterup=============");
+                    //console.dir(invAfterUp);
+                    if(resultCheck.length===valeursInv.length){
+                        //Il ny a pas eu de fractionnement effectuer
+                        return {
+                            oldInv:allActionsOld,
+                            updatedInv:allActionsNew,
+                            error:true,
+                            message:"Il se pourrait que cette valeur mobilière soit déjà fractionné.Veuillez verifier dans le tableau affiché à l'écran."
+                        };
+                    }else{
+                        return {
+                            oldInv:allActionsOld,
+                            updatedInv:allActionsNew,
+                            error:false,
+                            message:"Fractionnement effectué"
+                        };
+                    }
+                }else{
+                    //on a pas pu recuperer les valeurs a la date precisee
+                    throw new Meteor.Error("notfound","L'inventaire ne contient pas de valeurs mobilière de ce type acquisent à la date que vous avez précisé.Il se pourrait aussi qu'un fractionement ait déjà été calculé précédemment  ");
+                }
+                
 
         },
         checkAdminUser(username,mdp){
@@ -675,6 +792,7 @@ export default ()=>{
 //-----------------COMPTABILISATION METHOD------------------------------->
         comptabilisation(rel){
             //console.dir(COMPTES);
+            let COMPTES=ComptesFinanciers.find().fetch();
             if(rel.length<-1){
                 throw new Meteor.Error("Relever invalide");
             }else{
@@ -710,7 +828,7 @@ export default ()=>{
                             temp.typeOp="AAC";
                             temp.indexOP=i;
                            //FIFO on verifie que cette ligne n'existe pas deja dans l'inventaire si elle existe on skip
-                           let dateAchatFormatted=transformInFrenchDate(e.DATE_ACHAT_DES_TITRES);
+                           let dateAchatFormatted=convertInDateObjFromFrenchDate(transformInFrenchDate(e.DATE_ACHAT_DES_TITRES));
 
                            console.log("===== Date Achat en francais "+dateAchatFormatted);
                            let existInFIFO=Inventaire.findOne({DateAcquisition:dateAchatFormatted,reference:temp.ref,Symbole:e.SYMBOLE,PrixUnitaire:e.PRIX_UNITAIRE,Quantite:e.QUANTITE});
@@ -953,7 +1071,7 @@ export default ()=>{
                     for(let i=0;i<results.data.length;i++){
                         console.dir(results.data[i]);
                         Inventaire.insert({
-                            DateAcquisition:results.data[i].DATE,
+                            DateAcquisition:convertInDateObjFromFrenchDate(results.data[i].DATE),
                             Valeur:results.data[i].VALEURS,
                             Quantite:parseInt(results.data[i].Qtites,10),
                             PrixUnitaire:parseInt(results.data[i].Nominal,10),
@@ -962,9 +1080,13 @@ export default ()=>{
                             Symbole:results.data[i].SYMBOL,
                             reference:parseInt(results.data[i].Reference,10),
                             lastTypeOp:"INVFILE",
+                            IsFractionned:false,
                             type:results.data[i].TYPE_VALEUR
                         });
                     }
+                    Inventaire.remove({
+                        Valeur:null
+                    });
                 }
             });
         },

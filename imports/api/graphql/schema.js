@@ -19,6 +19,7 @@ const schema=`
         Symbole:String
         reference:Int
         lastTypeOp:String
+        IsFractionned:Boolean
         type:String
     }
     type Query{

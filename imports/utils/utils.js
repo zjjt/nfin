@@ -8,6 +8,26 @@ Array.prototype.sum=(prop)=>{
     return total;
 };
 
+//compare deux tableaux pour verifier l'egalite
+let arrAreSame=(arr1,arr2)=>{
+    let inArray=(array,el)=>{
+        for(let i=array.length;i--;){
+            if(array[i]===el)return true;
+        }
+        return false;
+    };
+
+    if(arr1.length!==arr2.length){
+        return false;
+    }
+    for(let i=arr1.length;i--;){
+        if(!inArray(arr2,arr1[i])){
+            return false;
+        }
+    }
+    return true;
+}
+
 let transformInFrenchDate=(e)=>{
     let day=e.substring(6);
     let mois=e.substring(4,6);
@@ -15,6 +35,7 @@ let transformInFrenchDate=(e)=>{
     let date=`${day}/${mois}/${year}`;
     return date;
 };
+
 let convertInDateObjFromFrenchDate=(e)=>{
     let day=e.substring(0,2);
     let mois=e.substring(3,5);
@@ -75,4 +96,4 @@ const groupSumBySymbole=(arr,propAgrouper,propAsum)=>{
     arr.forEach(processRecord);
     return ([...newArray.values()]);
 }
-export {transformInFrenchDate,formatNumberInMoney,groupByLibel,groupSumBySymbole,convertInDateObjFromFrenchDate};
+export {arrAreSame,transformInFrenchDate,formatNumberInMoney,groupByLibel,groupSumBySymbole,convertInDateObjFromFrenchDate};

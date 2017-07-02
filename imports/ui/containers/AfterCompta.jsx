@@ -46,6 +46,7 @@ class AfterCompta extends Component {
     }
 
     componentDidMount(){
+        
         $('.toolbarTitle').delay(18000).show().addClass("fadeInRight animated");
         $('.animAppBar1').addClass("animated fadeInLeft");
         $('.animAppBar2').addClass("animated fadeInRight");
@@ -96,6 +97,7 @@ class AfterCompta extends Component {
     }
 
     render(){
+      
        const {opCompta,isFull,fifoSnap,filtreInv}=this.props;
         const resiser1=(<ActionAspectRatio style={style.agrandicon} 
                             color="#ffffff" 
@@ -132,7 +134,9 @@ class AfterCompta extends Component {
                        if(this.state.dtitle==="Quitter la page ?"){
                            //on efface l'inventaire actuel et on le remplace par le snap dans redux
                                 Meteor.call('dropInventory',(err,res)=>{
-                                    Meteor.call('chargeInvWithSnap',fifoSnap,()=>{FlowRouter.go('dashboard')});
+                                    Meteor.call('chargeInvWithSnap',fifoSnap,()=>{
+                                        FlowRouter.go('home');
+                                    });
                                 });
                            
                        }
