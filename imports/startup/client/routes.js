@@ -6,6 +6,7 @@ import store from '../../redux/store.js'
 import Uploader from '../../ui/containers/Uploader.jsx';
 import InventUploader from '../../ui/containers/InventUploader.jsx';
 import Dashboard from '../../ui/containers/Dashboard.jsx';
+import DashboardHisto from '../../ui/containers/DashboardHisto.jsx';
 import MainLayout from '../../ui/Layouts/MainLayout/MainLayout.jsx';
 import Login from '../../ui/containers/Login.jsx';
 import AdminLogin from '../../ui/containers/AdminLogin.jsx';
@@ -15,6 +16,7 @@ import CreateUser from '../../ui/containers/CreateUser.jsx';
 import AdminUserList from '../../ui/containers/AdminUserList.jsx';
 import FormuFractionnement from '../../ui/containers/FormuFractionnement.jsx'
 import Wallet from '../../ui/containers/Wallet.jsx';
+import HistoFIFO from '../../ui/containers/HistoFIFO.jsx';
 import ComptesFin from '../../ui/containers/ComptesFin.jsx';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import {FichiersInv,Inventaire,ComptesFinanciers} from '../../api/collections.js';
@@ -34,7 +36,18 @@ FlowRouter.route('/',{
 	}
 });
 
-
+FlowRouter.route('/dashboard',{
+	name:'dashboard',
+	triggersEnter:[(context,redirect)=>{
+		if(!Meteor.user()){
+			redirect('/');
+		}
+	}],
+	action(){
+		mount(MainLayout,
+			{content:()=><Dashboard/>})
+	}
+});
 
 
 FlowRouter.route('/dashboard/fractionnement/',{
@@ -53,6 +66,45 @@ FlowRouter.route('/dashboard/fractionnement/',{
 	action(){
 		mount(MainLayout,
 			{content:()=><FormuFractionnement/>})
+	}
+});
+
+
+FlowRouter.route('/dashboard/historique/',{
+	name:'histodashboard',
+	triggersEnter:[(context,redirect)=>{
+		let res=Inventaire.find().count();
+		if(!res){
+			if(!Meteor.user()){
+					redirect('/');
+				}else if(Meteor.user()){
+					alert("Aucun inventaire détecté !!!");
+					redirect('/dashboard/insert-wallet/');
+				}
+		}
+	}],
+	action(){
+		mount(MainLayout,
+			{content:()=><DashboardHisto/>})
+	}
+});
+
+FlowRouter.route('/dashboard/historique/FIFO/',{
+	name:'histoFIFO',
+	triggersEnter:[(context,redirect)=>{
+		let res=Inventaire.find().count();
+		if(!res){
+			if(!Meteor.user()){
+					redirect('/');
+				}else if(Meteor.user()){
+					alert("Aucun inventaire détecté !!!");
+					redirect('/dashboard/insert-wallet/');
+				}
+		}
+	}],
+	action(){
+		mount(MainLayout,
+			{content:()=><HistoFIFO/>})
 	}
 });
 

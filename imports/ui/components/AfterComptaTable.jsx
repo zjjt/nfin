@@ -14,7 +14,8 @@ import {Table, TableBody, TableFooter, TableHeader, TableHeaderColumn, TableRow,
 import {graphql} from 'react-apollo';
 import gql from 'graphql-tag';
 import MenuItem from 'material-ui/MenuItem';
-import {miseajourDispo} from '../../redux/actions/user-actions.js'
+import {miseajourDispo} from '../../redux/actions/user-actions.js';
+import {toutEstValid} from '../../redux/actions/user-actions.js';
 import LinearProgress from 'material-ui/LinearProgress';
 import {simplifyOp,explodeOps} from '../../redux/actions/relever-actions.js';
 import {formatNumberInMoney} from '../../utils/utils.js';
@@ -97,7 +98,8 @@ toggleTextandExpand()
         }
 
         render(){
-            const {handleSubmit,pristine,submitting,dispatch,opCompta,isFull}=this.props;
+            console.dir(this.props);
+            const {handleSubmit,pristine,submitting,dispatch,opCompta,isFull,fifosnap}=this.props;
              console.dir(this.props.data);
              let sommeC=0,sommeD=0,resultatClass='';
           if(opCompta!==undefined){
@@ -199,7 +201,7 @@ toggleTextandExpand()
                             label="Exporter vers excel"
                             labelColor="white"
                             backgroundColor="#cd9a2e"
-                            onClick={()=>{}}
+                            onClick={()=>{dispatch(toutEstValid())}}
                         />
                      </div>
                     <div className="helperDiv">

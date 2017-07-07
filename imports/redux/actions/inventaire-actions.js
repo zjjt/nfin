@@ -8,7 +8,7 @@ export const SNAPINVENTAIRE='SNAPINVENTAIRE';
 export const FILTRERINVENTAIRE='FILTRERINVENTAIRE';
 
 export function snapInvent(){
-	let inv=Inventaire.find({}).fetch();
+	let inv=Inventaire.find({},{sort:{DateAcquisition:1}}).fetch();
 	return{
 		type:SNAPINVENTAIRE,
 		inventaireSnap:inv

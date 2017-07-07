@@ -68,10 +68,9 @@ import {Session} from 'meteor/session';
                     iconStyle={{color:'white'}}	
                     >
                         <MenuItem primaryText="Déconnection" onClick={()=>{
-                            Meteor.logout(()=>{
-                            Session.keys={};
-                            FlowRouter.go('home');
-                        });
+                                                   
+                           
+                            
                         }}/>
                     </IconMenu>
                 
@@ -88,9 +87,18 @@ import {Session} from 'meteor/session';
                         iconStyle={{color:'white'}}	
                         >
                            
-                            <MenuItem primaryText="Déconnection" onClick={()=>Meteor.logout(()=>{
-                                FlowRouter.go('home');
-                            })}/>
+                            <MenuItem primaryText="Déconnection" onClick={()=>{
+                                 if(FlowRouter.current().route.name!="report"){
+                                            Meteor.logout(()=>{
+                                                Session.keys={};
+                                                FlowRouter.go('home');
+                                            });
+                                        }else{
+                                            alert("Vous ne pouvez vous déconnecter pendant une étape de cette envergure.");
+                                        } 
+                          
+                            
+                            }}/>
                         </IconMenu>
                     
                         );

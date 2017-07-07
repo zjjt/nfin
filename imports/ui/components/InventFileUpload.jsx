@@ -118,7 +118,7 @@ const styles={
                                             console.dir(res);
                                             //call flow router vers l'inventaire total
                                             if(!err){
-                                                alert('INVENTAIRE INSERER')
+                                                alert('Inventaire inséré !')
                                                 FlowRouter.go('wallet');   
                                             }
                                                 
@@ -156,7 +156,7 @@ const styles={
                             <div style={{height:'10px'}}></div>
                             <div>
                                 {this.state.currentFile&&this.state.progress<=99?(<CircularProgress size={60} thickness={7}/>):this.state.progress!==100?(<span>Le fichier doit être au format csv et ne doit pas exéder 10MB</span>):null}
-                                {this.state.progress===100?(<span style={{color:'green',textAlign:'center'}}>Fichier Téléchargé<br/>Veuillez patienter pendant la création de l'inventaire<marquee>...</marquee></span>):null}
+                                {this.state.progress===100?(<span style={{color:'green',textAlign:'center'}}>Fichier Téléchargé<br/>Veuillez patienter pendant la création de l'inventaire<LinearProgress mode="indeterminate"/></span>):null}
                             </div>
                         
                     </div>

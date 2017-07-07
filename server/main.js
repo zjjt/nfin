@@ -12,6 +12,10 @@ Meteor.startup(()=>{
     FichiersOPPub();
     InventairePub();
     ComptesFinanciersPub();
+    InventaireBackPub();
+    HistoriqueRPub();
+    HistoriqueFIFOPub();
+    TempHistoFIFOPub();
     methods();
    //lancer une tache propre a l'application ms qui s'execute sur le serveur
    Meteor.call('defaultSGI',()=>{

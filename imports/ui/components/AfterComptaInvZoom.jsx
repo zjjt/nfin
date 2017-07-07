@@ -346,7 +346,7 @@ export default createContainer(()=>{
         loading,
         invone,
         invExist,
-        inventaire:invExist? Inventaire.find().fetch():[],
+        inventaire:invExist? Inventaire.find({},{sort:{DateAcquisition:1}}).fetch():[],
     };
 },AfterComptaInvZoom);
 /*const getInventory=gql`

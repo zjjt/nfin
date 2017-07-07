@@ -19,10 +19,13 @@ import AfterComptaTableZoom from '../components/AfterComptaTableZoom.jsx';
 import AfterComptaInvZoom from '../components/AfterComptaInvZoom.jsx';
 import AfterComptaInv from '../components/AfterComptaInv.jsx';
 import {moment} from 'meteor/momentjs:moment';
+import {shouldExtractAgresso,toutEstValid} from '../../redux/actions/user-actions.js';
 import { createContainer } from 'meteor/react-meteor-data';
+import {groupByLibel} from '../../utils/utils.js'
 import AppBar from 'material-ui/AppBar';
 import {Meteor} from 'meteor/meteor';
-
+let json2xls=require("json2xls");
+//let Excel=require('exceljs');
 
 
 let DateTimeFormat;
@@ -76,6 +79,14 @@ class AfterCompta extends Component {
         });
     }
 
+    componentDidUpdate(){
+        const{toutEstValide,shouldExtract,dispatch}=this.props;
+        //alert("toutEstValide"+toutEstValide+"shouldExtract "+shouldExtract);
+        if(toutEstValide&&!shouldExtract){
+
+        this._afficherConfirmation(dispatch);
+       }
+    }
     _orderTable(){
             this.setState({
                 orderDesc:!orderDesc
@@ -95,10 +106,19 @@ class AfterCompta extends Component {
     _dialogTClose(){
         this.setState({dialogTIsOpen: false,alreadyOp:true});
     }
+    _afficherConfirmation(dispatch){
+        this.setState({
+            dtitle:"Validez vous les résultats ?",
+            dmessage:"La comptabilisation, la génération d'un fichier excel compatible avec le logiciel AGRESSO, ainsi que la mise à jour de l'inventaire et du FIFO seront répercutés dans la base de données.\nEtes vous d'accord ?"
+        });
+        this._dialogOpen();
+        dispatch(toutEstValid());
+    }
 
     render(){
       
-       const {opCompta,isFull,fifoSnap,filtreInv}=this.props;
+       const {opCompta,isFull,fifoSnap,filtreInv,releve,toutEstValide}=this.props;
+       
         const resiser1=(<ActionAspectRatio style={style.agrandicon} 
                             color="#ffffff" 
                             hoverColor="#cd9a2e" 
@@ -135,10 +155,50 @@ class AfterCompta extends Component {
                            //on efface l'inventaire actuel et on le remplace par le snap dans redux
                                 Meteor.call('dropInventory',(err,res)=>{
                                     Meteor.call('chargeInvWithSnap',fifoSnap,()=>{
-                                        FlowRouter.go('home');
+                                        FlowRouter.go('dashboard');
                                     });
                                 });
                            
+                       }else if(this.state.dtitle==="Validez vous les résultats ?"){
+                           this._dialogClose();
+                           const{fifoSnap,releve}=this.props;
+                             Meteor.call("saveChanges",fifoSnap,releve,(res)=>{
+                                 
+                                 if(res){
+                                     console.dir(res);
+                                    alert("Sauvegarde effectuée...\n Un fichier excel contenant une sauvegarde de l'inventaire à la date du "+moment(res.date).format("DD/MM/YYYY")+" sera téléchargé automatiquement...");
+                                    const blob=new Blob([res.blob],{
+                                        type:'application/octet-stream'
+                                    });
+                                    const a=window.document.createElement('a');
+                                    a.href=window.URL.createObjectURL(blob,{
+                                        type:'data:attachment/xlsx'
+                                    });
+                                    a.download="INVENTAIRE_"+moment(res.date).format("DD/MM/YYYY")+".csv";
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    document.body.removeChild(a);
+                                 }else{
+                                     alert("Sauvegarde effectuée...");
+                                 }
+                             });
+                             Meteor.call("exportToExcelAgresso",this.props.opCompta,(err,res)=>{
+                                if(res){
+                                    alert("Votre fichier sera téléchargé automatiquement...");
+                                    const blob=new Blob([res],{
+                                        type:'application/octet-stream'
+                                    });
+                                    const a=window.document.createElement('a');
+                                    a.href=window.URL.createObjectURL(blob,{
+                                        type:'data:attachment/xlsx'
+                                    });
+                                    a.download="AGRESSO_COMPTA_"+moment(new Date()).format("DD/MM/YYYY")+".xlsx";
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    document.body.removeChild(a);
+                                    FlowRouter.go("dashboard");
+                                }
+                            }); 
                        }
                         
                     }}
@@ -217,7 +277,7 @@ class AfterCompta extends Component {
                                         textAlign:'center'
                                     }}
                                 />
-                                <AfterComptaTable opCompta={opCompta} isFull={isFull}/>
+                                <AfterComptaTable opCompta={opCompta} isFull={isFull} />
                             </div>
                             <div className="VerticalSeparator"></div>
                             <div className="window">
@@ -251,6 +311,9 @@ AfterCompta=connect(
       opCompta:state.releveDuJour.isFull?state.releveDuJour.resultatComptaFull:state.releveDuJour.resultatComptaSimple,
       isFull:state.releveDuJour.isFull,
       filtreInv:state.inventaire.filter,
+      releve:state.releveDuJour.releverDuJour,
+      toutEstValide:state.userActions.toutValide,
+      shouldExtract:state.userActions.shouldExtractAGR,
       dispatch
     }
   }

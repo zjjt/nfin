@@ -68,8 +68,11 @@ let FichiersInv=new FilesCollection({
 
 let TempReleve=new Mongo.Collection('TempReleve');
 let Inventaire=new Mongo.Collection('Inventaire');
+let InventaireBackup=new Mongo.Collection('InventaireBackup');
 let ComptesFinanciers=new Mongo.Collection('ComptesFinanciers');
 let SGI=new Mongo.Collection('SGI');
-let Historique=new Mongo.Collection('Historique');
+let HistoriqueR=new Mongo.Collection('HistoriqueR');
+let HistoriqueFIFO=new Mongo.Collection('HistoriqueFIFO');
+let TempHistoFIFO=new Mongo.Collection('TempHistoFIFO');
 
-export {FichiersOP,FichiersInv,TempReleve,Inventaire,SGI,Historique,ComptesFinanciers};
+export {FichiersOP,FichiersInv,TempReleve,Inventaire,InventaireBackup,SGI,HistoriqueR,HistoriqueFIFO,TempHistoFIFO,ComptesFinanciers};

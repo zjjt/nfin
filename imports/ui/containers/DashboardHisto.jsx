@@ -18,7 +18,7 @@ import {Session} from 'meteor/session';
                                 <div className="cardContainer fadeInRight animated">
                                     <Card className="cards" onClick={()=>FlowRouter.go('wallet')}>
                                         <CardHeader 
-                                            title="Portefeuille des titres financiers"
+                                            title="Historique des opérations"
                                             className="cardsHeader" 
                                         />
                                         <CardMedia className="cardsMedia">
@@ -32,36 +32,36 @@ import {Session} from 'meteor/session';
                 return(<div className="centeredContent">
                             <div className="cardMenu " >
                              <div className="cardContainer fadeInRight animated">
-                                <Card className="cards" onClick={()=>FlowRouter.go('wallet')}>
+                                <Card className="cards" onClick={()=>{}/*()=>FlowRouter.go('wallet')*/}>
                                     <CardHeader 
-                                        title="Inventaire des titres financiers"
+                                        title="Détails des relevés intégrés"
                                         className="cardsHeader" 
                                     />
                                     <CardMedia className="cardsMedia">
-                                        <img src="../img/titre.png"/>
+                                        <img src="../img/detrel.png"/>
                                     </CardMedia>
                                 </Card>
                             </div>
                             
                             <div className="cardContainer fadeInRight animated">
-                                <Card className="cards" onClick={()=>FlowRouter.go('upload')}>
+                                <Card className="cards" onClick={()=>{}/*()=>FlowRouter.go('upload')*/}>
                                     <CardHeader 
-                                        title="Intégrer un relevé"
+                                        title="Historique de l'inventaire"
                                         className="cardsHeader" 
                                     />
                                     <CardMedia className="cardsMedia">
-                                        <img src="../img/fichier.png"/>
+                                        <img src="../img/invstory.png"/>
                                     </CardMedia>
                                 </Card>
                             </div>
                             <div className="cardContainer fadeInRight animated">
-                                <Card className="cards" onClick={()=>FlowRouter.go('histodashboard')}>
+                                <Card className="cards" onClick={()=>FlowRouter.go('histoFIFO')}>
                                     <CardHeader 
                                         title="Historique des opérations"
                                         className="cardsHeader" 
                                     />
                                     <CardMedia className="cardsMedia">
-                                        <img src="../img/histo.png"/>
+                                        <img src="../img/histoop.png"/>
                                     </CardMedia>
                                 </Card>
                             </div>

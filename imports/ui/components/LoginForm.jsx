@@ -48,7 +48,7 @@ import {Meteor} from 'meteor/meteor'
             }else{
                     Meteor.loginWithPassword(values.username,values.password,(err)=>{
                         if(err){
-                                let errmsg=err.reason=="User not found"?"Cet utilisateur n'existe pas.Veuillez contacter l'administrateur":null;
+                                let errmsg=err.reason=="User not found"?"Cet utilisateur n'existe pas.Veuillez contacter l'administrateur":err.reason;
                             this.setState({
                                 errorMsg:"Un problême de connection est survenu. "+errmsg
                             });      

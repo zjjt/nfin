@@ -1,6 +1,6 @@
 import {Meteor} from 'meteor/meteor';
 import {DBSQLITE,DBSQLSERVER} from './connectors.js';
-import {Inventaire} from '../collections.js'; 
+import {Inventaire,HistoriqueFIFO,InventaireBackup} from '../collections.js'; 
 import Sequelize from 'sequelize';
 
 DBSQLSERVER.sync();
@@ -29,22 +29,22 @@ const resolvers={
         inventaire(_,args){
             if(args.type==="A" && (!args.search||args.search==="")){
                 Inventaire.remove({DateAcquisition:""});
-                return Inventaire.find({type:"ACTIONS"}).fetch();
+                return Inventaire.find({type:"ACTIONS"},{sort:{DateAcquisition:1}}).fetch();
             }else if(args.type==="A" && (args.search||args.search!=="")) {
                 Inventaire.remove({DateAcquisition:""});
-                return Inventaire.find({type:"ACTIONS",Valeur:{$regex:args.search.toUpperCase()}}).fetch();
+                return Inventaire.find({type:"ACTIONS",Valeur:{$regex:args.search.toUpperCase()}},{sort:{DateAcquisition:1}}).fetch();
             }else if(args.type==="O" && (!args.search||args.search==="")) {
                 Inventaire.remove({DateAcquisition:""});
                 return Inventaire.find({type:"OBLIGATIONS"}).fetch();
             }else if(args.type==="O" && (args.search||args.search!=="")) {
                 Inventaire.remove({DateAcquisition:""});
-                return Inventaire.find({type:"OBLIGATIONS",Valeur:{$regex:args.search.toUpperCase()}}).fetch();
+                return Inventaire.find({type:"OBLIGATIONS",Valeur:{$regex:args.search.toUpperCase()}},{sort:{DateAcquisition:1}}).fetch();
             }else if(args.type==="ALL" && (!args.search||args.search==="")) {
                 Inventaire.remove({DateAcquisition:""});
-                return Inventaire.find({}).fetch();
+                return Inventaire.find({},{sort:{DateAcquisition:1}}).fetch();
             }else if(args.type==="ALL" && (args.search||args.search!=="")) {
                 Inventaire.remove({DateAcquisition:""});
-                return Inventaire.find({Valeur:{$regex:args.search.toUpperCase()}}).fetch();
+                return Inventaire.find({Valeur:{$regex:args.search.toUpperCase()}},{sort:{DateAcquisition:1}}).fetch();
             }
             
             /*if(args.type==="A" && (!args.search||args.search==="")){
@@ -59,6 +59,26 @@ const resolvers={
                 console.log(typeof Inventaire);
                 return Inventaire.find({}).fetch();
             }*/
+        },
+        histoFIFO(_,args){
+            //le All sert a distinguer entre actions et obligations a se rappeler
+            if(args.type==="ALL" && args.typeop==="TOUT" && args.symbole==""){
+                return HistoriqueFIFO.find({},{sort:{Date:1}}).fetch();
+            }else if(args.type==="ALL" && args.typeop==="VENTE+"&& args.symbole==""){
+                 return HistoriqueFIFO.find({typeop:"VENTE+"},{sort:{Date:1}}).fetch();
+            }else if(args.type==="ALL" && args.typeop==="VENTE-"&& args.symbole==""){
+                 return HistoriqueFIFO.find({typeop:"VENTE-"},{sort:{Date:1}}).fetch();
+            }else if(args.type==="ALL" && args.typeop==="ACHAT"&& args.symbole==""){
+                return HistoriqueFIFO.find({typeop:"ACHAT"},{sort:{Date:1}}).fetch();
+            }else if(args.type==="ALL" && args.typeop==="TOUT" && args.symbole!=""){
+                return HistoriqueFIFO.find({Symbole:args.symbole},{sort:{Date:1}}).fetch();
+            }else if(args.type==="ALL" && args.typeop==="VENTE+"&& args.symbole!=""){
+                 return HistoriqueFIFO.find({typeop:"VENTE+",Symbole:args.symbole},{sort:{Date:1}}).fetch();
+            }else if(args.type==="ALL" && args.typeop==="VENTE-"&& agrs.symbole!=""){
+                 return HistoriqueFIFO.find({typeop:"VENTE-",Symbole:args.symbole},{sort:{Date:1}}).fetch();
+            }else if(args.type==="ALL" && args.typeop==="ACHAT"&& args.symbole!=""){
+                return HistoriqueFIFO.find({typeop:"ACHAT",Symbole:args.symbole},{sort:{Date:1}}).fetch();
+            }
         }
     },
     /*Mutation:{

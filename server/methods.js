@@ -3,19 +3,20 @@ import {Accounts} from 'meteor/accounts-base';
 import Sequelize from 'sequelize';
 import {DBSQLITE,DBSQLSERVER} from '../imports/api/graphql/connectors.js';
 import {moment} from 'meteor/momentjs:moment';
-import Excel from 'exceljs';
+//import Excel from 'exceljs';
 import LineByLineReader from 'line-by-line';
-import {TempReleve,SGI,ComptesFinanciers,FichiersInv,Inventaire} from '../imports/api/collections.js';
+import {TempReleve,SGI,ComptesFinanciers,TempHistoFIFO,FichiersInv,Inventaire,HistoriqueFIFO,HistoriqueR,InventaireBackup} from '../imports/api/collections.js';
 import Future from 'fibers/future';
-import {arrAreSame,transformInFrenchDate,groupByLibel,convertInDateObjFromFrenchDate} from '../imports/utils/utils.js';
+import {arrAreSame,transformInFrenchDate,groupByLibel,groupSumBySymbole,convertInDateObjFromFrenchDate} from '../imports/utils/utils.js';
 //import {Baby} from 'meteor/modweb:baby-parse';
 import Baby from 'babyparse';
 import {check} from 'meteor/check';
 import _ from 'lodash';
 const R= require('ramda');
+const streamBuffers=require("stream-buffers");
 
-const json2xls=require('json2xls');
-//const Excel=require('exceljs');
+//const json2xls=require('json2xls');
+let Excel=require('exceljs');
 let xlfile=process.env.PWD+'/FICHIERS/relevers/releveOp.xls';
 
 
@@ -40,10 +41,10 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                             let COMPTES=ComptesFinanciers.find().fetch();
                            let dateAchatFormatted=convertInDateObjFromFrenchDate(transformInFrenchDate(e.DATE_ACHAT_DES_TITRES));
                            //console.log("===== Date Achat en francais vente d'action "+dateAchatFormatted);
-                           let existInFIFO=Inventaire.findOne({Symbole:e.SYMBOLE});
+                           let existInFIFO=Inventaire.findOne({Symbole:e.SYMBOLE},{sort:{DateAcquisition:1}});
                            if(existInFIFO){
                               //si l'action existe dans l'inventaire on verifie la premiere occurence de l'action dans l'inventaire
-                               console.log("Le voila premier objet trouver pour la vente d'action symbole= " +e.SYMBOLE+" est: ");
+                               console.log("Le voila premier objet trouver pour la vente d'action symbole= " +e.SYMBOLE+" est: "+existInFIFO.DateAcquisition);
                                //console.log(existInFIFO);
                                 console.log("la quantite restante en stock est "+quantiteRestante);
                                /**Procedure vente d'actions
@@ -90,6 +91,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                         temp.ref=parseInt(e.REFERENCE);
                                         temp.ou="C";
                                         temp.qte=libelleQteAfficher;
+                                        temp.date=dateAchatFormatted;
                                         temp.typeOp="VAC";
                                         temp.indexOP=index;
 
@@ -105,9 +107,23 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                         mvpv.ref=parseInt(e.REFERENCE);
                                         mvpv.ou="D";
                                         mvpv.qte=libelleQteAfficher;
+                                        mvpv.date=dateAchatFormatted;
                                         mvpv.typeOp="VAC";
                                         mvpv.indexOP=index+1;
-                                        
+                                        //Archivage de la vente dans HistoriqueFIFO
+                                        TempHistoFIFO.insert({
+                                            Valeur:e.VALEUR,
+                                            Date:dateAchatFormatted,
+                                            typeop:'VENTE-',
+                                            Quantite:libelleQteAfficher,
+                                            prixVente:e.PRIX_UNITAIRE,
+                                            prixAchat:existInFIFO.PrixUnitaire,
+                                            ValBilan:0,
+                                            PMvalue:montantMV,
+                                            Symbole:e.SYMBOLE,
+                                            ref:parseInt(e.REFERENCE),
+                                            type:'ACTIONS'
+                                        });
                                         tableauRes.push({temp,mvpv});
                                         console.log("content of tableauRes avant return======");
                                         //console.log(tableauRes);
@@ -135,6 +151,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                             temp.ref=parseInt(e.REFERENCE);
                                             temp.ou="C";
                                             temp.qte=existInFIFO.Quantite;
+                                            temp.date=dateAchatFormatted;
                                             temp.typeOp="VAC";
                                             temp.indexOP=index;
 
@@ -150,15 +167,29 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                             mvpv.ref=parseInt(e.REFERENCE);
                                             mvpv.ou="D";
                                             mvpv.qte=existInFIFO.Quantite;
+                                            mvpv.date=dateAchatFormatted;
                                             mvpv.typeOp="VAC";
                                             mvpv.indexOP=index+1;
-
+                                                 //Archivage de la vente dans HistoriqueFIFO
+                                            TempHistoFIFO.insert({
+                                                Valeur:e.VALEUR,
+                                                Date:dateAchatFormatted,
+                                                typeop:'VENTE-',
+                                                Quantite:existInFIFO.Quantite,
+                                                prixVente:e.PRIX_UNITAIRE,
+                                                prixAchat:existInFIFO.PrixUnitaire,
+                                                ValBilan:0,
+                                                PMvalue:montantMV,
+                                                Symbole:e.SYMBOLE,
+                                                ref:parseInt(e.REFERENCE),
+                                                type:'ACTIONS'
+                                            });
                                             //on yield la valeur trouver
                                              console.log("longueur du tableau avant "+tableauRes.length);
                                             tableauRes.push({temp,mvpv});
                                          
                                             //on check si on a encore ce type de valeur en stock
-                                            existInFIFO=Inventaire.findOne({Symbole:e.SYMBOLE});
+                                            existInFIFO=Inventaire.findOne({Symbole:e.SYMBOLE},{sort:{DateAcquisition:1}});
                                             if(existInFIFO){
                                                 comptaMVPV(e,index++,Math.abs(newQteEnStockDuPremierTrouver),pvmvTemp,tableauRes);
                                             }
@@ -187,6 +218,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                             temp.ref=parseInt(e.REFERENCE);
                                             temp.ou="C";
                                             temp.qte=existInFIFO.Quantite;
+                                            temp.date=dateAchatFormatted;
                                             temp.typeOp="VAC";
                                             temp.indexOP=index;
 
@@ -202,9 +234,23 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                             mvpv.ref=parseInt(e.REFERENCE);
                                             mvpv.ou="D";
                                             mvpv.qte=existInFIFO.Quantite;
+                                            mvpv.date=dateAchatFormatted;
                                             mvpv.typeOp="VAC";
                                             mvpv.indexOP=index+1;
-
+                                                //Archivage de la vente dans HistoriqueFIFO
+                                            TempHistoFIFO.insert({
+                                                Valeur:e.VALEUR,
+                                                Date:dateAchatFormatted,
+                                                typeop:'VENTE-',
+                                                Quantite:existInFIFO.Quantite,
+                                                prixVente:e.PRIX_UNITAIRE,
+                                                prixAchat:existInFIFO.PrixUnitaire,
+                                                ValBilan:0,
+                                                PMvalue:montantMV,
+                                                Symbole:e.SYMBOLE,
+                                                ref:parseInt(e.REFERENCE),
+                                                type:'ACTIONS'
+                                            });
                                             //on yield la valeur trouver
                                             // console.log("longueur du tableau avant "+tableauRes.length);
                                             // console.dir(temp);
@@ -244,7 +290,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                                 lastTypeOp:"VACPV"
                                             }
                                         });
-                                        //comptabilisation moins value
+                                        //comptabilisation plus value
                                         let compte=COMPTES.filter((obj)=>{
                                             return obj.type==="AC"
                                         });
@@ -263,6 +309,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                         temp.ref=parseInt(e.REFERENCE);
                                         temp.ou="C";
                                         temp.qte=libelleQteAfficher;
+                                        temp.date=dateAchatFormatted;
                                         temp.typeOp="VAC";
                                         temp.indexOP=index;
 
@@ -278,9 +325,23 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                         mvpv.ref=parseInt(e.REFERENCE);
                                         mvpv.ou="C";
                                         mvpv.qte=libelleQteAfficher;
+                                        mvpv.date=dateAchatFormatted;
                                         mvpv.typeOp="VAC";
                                         mvpv.indexOP=index+1;
-                                        
+                                          //Archivage de la vente dans HistoriqueFIFO
+                                            TempHistoFIFO.insert({
+                                                Valeur:e.VALEUR,
+                                                Date:dateAchatFormatted,
+                                                typeop:'VENTE+',
+                                                Quantite:libelleQteAfficher,
+                                                prixVente:e.PRIX_UNITAIRE,
+                                                prixAchat:existInFIFO.PrixUnitaire,
+                                                ValBilan:0,
+                                                PMvalue:montantPV,
+                                                Symbole:e.SYMBOLE,
+                                                ref:parseInt(e.REFERENCE),
+                                                type:'ACTIONS'
+                                            });
                                         tableauRes.push({temp,mvpv});
                                         console.log("content of tableauRes avant return======");
                                         //console.log(tableauRes);
@@ -308,6 +369,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                             temp.ref=parseInt(e.REFERENCE);
                                             temp.ou="C";
                                             temp.qte=existInFIFO.Quantite;
+                                            temp.date=dateAchatFormatted;
                                             temp.typeOp="VAC";
                                             temp.indexOP=index;
 
@@ -323,15 +385,29 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                             mvpv.ref=parseInt(e.REFERENCE);
                                             mvpv.ou="C";
                                             mvpv.qte=existInFIFO.Quantite;
+                                            mvpv.date=dateAchatFormatted;
                                             mvpv.typeOp="VAC";
                                             mvpv.indexOP=index+1;
-
+                                            //Archivage de la vente dans HistoriqueFIFO
+                                            TempHistoFIFO.insert({
+                                                Valeur:e.VALEUR,
+                                                Date:dateAchatFormatted,
+                                                typeop:'VENTE+',
+                                                Quantite:existInFIFO.Quantite,
+                                                prixVente:e.PRIX_UNITAIRE,
+                                                prixAchat:existInFIFO.PrixUnitaire,
+                                                ValBilan:0,
+                                                PMvalue:montantPV,
+                                                Symbole:e.SYMBOLE,
+                                                ref:parseInt(e.REFERENCE),
+                                                type:'ACTIONS'
+                                            });
                                             //on yield la valeur trouver
                                              console.log("longueur du tableau avant "+tableauRes.length);
                                             tableauRes.push({temp,mvpv});
                                           
                                             //on check si on a encore ce type de valeur en stock
-                                            existInFIFO=Inventaire.findOne({Symbole:e.SYMBOLE});
+                                            existInFIFO=Inventaire.findOne({Symbole:e.SYMBOLE},{sort:{DateAcquisition:1}});
                                             if(existInFIFO){
                                                 comptaMVPV(e,index++,Math.abs(newQteEnStockDuPremierTrouver),pvmvTemp,tableauRes);
                                             }
@@ -344,7 +420,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                             //on comptabilise la moins value et la sortie de stock(vente)
                                             
                                         });
-                                         //comptabilisation moins value
+                                         //comptabilisation plus value
                                             let compte=COMPTES.filter((obj)=>{
                                                 return obj.type==="AC"
                                             });
@@ -357,6 +433,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                             temp.ref=parseInt(e.REFERENCE);
                                             temp.ou="C";
                                             temp.qte=existInFIFO.Quantite;
+                                            temp.date=dateAchatFormatted;
                                             temp.typeOp="VAC";
                                             temp.indexOP=index;
 
@@ -372,9 +449,23 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                             mvpv.ref=parseInt(e.REFERENCE);
                                             mvpv.ou="C";
                                             mvpv.qte=existInFIFO.Quantite;
+                                            mvpv.date=dateAchatFormatted;
                                             mvpv.typeOp="VAC";
                                             mvpv.indexOP=index+1;
-
+                                            //Archivage de la vente dans HistoriqueFIFO
+                                            TempHistoFIFO.insert({
+                                                Valeur:e.VALEUR,
+                                                Date:dateAchatFormatted,
+                                                typeop:'VENTE+',
+                                                Quantite:existInFIFO.Quantite,
+                                                prixVente:e.PRIX_UNITAIRE,
+                                                prixAchat:existInFIFO.PrixUnitaire,
+                                                ValBilan:0,
+                                                PMvalue:montantPV,
+                                                Symbole:e.SYMBOLE,
+                                                ref:parseInt(e.REFERENCE),
+                                                type:'ACTIONS'
+                                            });
                                             //on yield la valeur trouver
                                              console.log("longueur du tableau avant "+tableauRes.length);
                                             tableauRes.push({temp,mvpv});
@@ -394,7 +485,291 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
 }
 export default ()=>{
     Meteor.methods({
+        
+        saveChanges(fifosnap,releve){
+            //TODO sauvegarder le releve comptable
+            let fut=new Future();
+            let workbook=new Excel.Workbook();
+            workbook.creator='NFINAPP';
+                workbook.lastModifierdBy='NFINAPP';
+                workbook.created=new Date();
+                workbook.modified = new Date();
+                workbook.properties.date1904=true;
+                workbook.views=[{
+                    x:0,y:0,width:10000,height:20000,firstSheet:0,activeTab:1,visibility:'visible'
+                }];
+            releve.forEach((e,i,arr)=>{
+                HistoriqueR.insert({
+                    DATE_ACHAT_DES_TITRES:e.DATE_ACHAT_DES_TITRES,
+                    DATE_RECEPTION_DES_TITRES:e.DATE_RECEPTION_DES_TITRES,
+                    REFERENCE:e.REFERENCE,
+                    CODE_OPERATION:e.CODE_OPERATION,
+                    SYMBOLE:e.SYMBOLE,
+                    CODE_ISIN:e.CODE_ISIN,
+                    MONTANT_TOTAL:e.MONTANT_TOTAL,
+                    QUANTITE:e.QUANTITE,
+                    LIBELLE_OPERATION:e.LIBELLE_OPERATION,
+                    PRIX_UNITAIRE:e.PRIX_UNITAIRE,
+                    DATE_RELEVER:new Date(),
+                    PAR:Meteor.user().fullname
 
+                });
+
+            });
+            //TODO sauvegarder TempHistoFIFO dans HistoriqueFIFO et vider TempHistoFIFO
+            let tempHisto=TempHistoFIFO.find({},{sort:{Date:1}}).fetch();
+            if(tempHisto){
+                let foundInHisto=HistoriqueFIFO.findOne(tempHisto[0]);
+                if(!foundInHisto){
+                    tempHisto.forEach((e)=>{
+                        HistoriqueFIFO.insert(e);
+                    });     
+                    TempHistoFIFO.remove({_id:{$ne:""||null}});             
+                }
+            }
+            //TODO update l'inventaire changer les lastTypeOp en INVFILE
+            Inventaire.update({lastTypeOp:{$ne:'INVFILE'}},{$set:{lastTypeOp:'INVFILE'}});
+            //TODO sauvegarder dans le backup inventaire le snap fifosnap
+            //On peut avoir deux copies de l4inventaire ds cette collection
+            let inv=InventaireBackup.find({},{sort:{DateInventaire:1}}).fetch();
+            inv=groupSumBySymbole(inv,['moment'],['Quantite']);
+            if(inv.length>=2){
+                //on efface le plus ancien
+                
+                let oldInvback=InventaireBackup.find({moment:inv[0].moment}).fetch();
+                if(oldInvback.length){
+                    let momentum=Date.now();
+                fifosnap.forEach((e)=>{
+                    InventaireBackup.insert({
+                            DateAcquisition:e.DateAcquisition,
+                            Valeur:e.Valeur,
+                            Quantite:e.Quantite,
+                            PrixUnitaire:e.PrixUnitaire,
+                            ValBilan:e.ValBilan,
+                            SGI:e.SGI,
+                            Symbole:e.Symbole,
+                            reference:e.reference,
+                            lastTypeOp:"INVFILE",
+                            IsFractionned:e.IsFractionned,
+                            type:e.type,
+                            DateInventaire:new Date(),
+                            moment:momentum
+                        });
+                });
+                    InventaireBackup.remove({moment:inv[0].moment});
+                //Ou l4on peut donner l'option de l'extraire en Excel 
+                
+                
+                
+                let sheet=workbook.addWorksheet("INVENTAIRE_SAUVEGARDE");
+                sheet.columns=[{
+                        header:'DATE',
+                        key:'D',
+                        width:20
+                    },{
+                        header:'VALEURS',
+                        key:'V',
+                        width:20 
+                    },{
+                        header:'Qtites',
+                        key:'Q',
+                        width:20 
+                    },{
+                        header:'Nominal',
+                        key:'N',
+                        width:20 
+                    },{
+                        header:'VAL.  Bilan',
+                        key:'VB',
+                        width:20 
+                    },{
+                        header:'SGI',
+                        key:'SGI',
+                        width:20 
+                    },{
+                        header:'SYMBOL',
+                        key:'S',
+                        width:20 
+                    },{
+                        header:'Reference',
+                        key:'R',
+                        width:20 
+                    },{
+                        header:'TYPE_VALEUR',
+                        key:'T',
+                        width:20 
+                    }];
+                   // console.dir(oldInvback[0]);
+                    oldInvback.forEach((e)=>{
+                            
+                            sheet.addRow({
+                            D:e.DateAcquisition,
+                            V:e.Valeur,
+                            Q:e.Quantite,
+                            N:e.PrixUnitaire,
+                            VB:e.ValBilan,
+                            SGI:e.SGI,
+                            S:e.Symbole,
+                            R:e.reference,
+                            T:e.type
+
+                            });
+                        
+                    });
+                    workbook.xlsx.writeBuffer()//on transforme le tout en un blob que lon renverra au client pour telecharger via filesaver
+                    .then(function(e){
+                        //console.dir(e);
+                        console.log("xls file is written inventaire.");
+                        let o={blob:e,date:oldInvback[0].DateInventaire};
+                        //console.dir(o);
+                        fut['return'](o);
+                        
+                        //return buffer.getContents();
+                    });
+                }
+                //et on insere la nouvelle sauvegarde
+                
+                //console.dir(workbook);
+                 
+                
+                    
+            }else if(!inv.length||inv.length<2){
+                //et on insere la nouvelle sauvegarde
+                let momentum=Date.now();
+                console.log(momentum);
+                fifosnap.forEach((e)=>{
+                    InventaireBackup.insert({
+                            DateAcquisition:e.DateAcquisition,
+                            Valeur:e.Valeur,
+                            Quantite:e.Quantite,
+                            PrixUnitaire:e.PrixUnitaire,
+                            ValBilan:e.ValBilan,
+                            SGI:e.SGI,
+                            Symbole:e.Symbole,
+                            reference:e.reference,
+                            lastTypeOp:"INVFILE",
+                            IsFractionned:e.IsFractionned,
+                            type:e.type,
+                            DateInventaire:new Date(),
+                            moment:momentum
+                        });
+                });
+                let o={msg:"pasExcel"};
+                fut['return'](o);
+            }
+            return fut.wait();
+        },
+        exportToExcelAgresso(opCompta){
+            let fut=new Future();
+            //creation du fichier excel avec l'aide de exceljs
+            console.log("Opcompta length "+opCompta.length);
+            //console.dir(opCompta);
+            let totalOp=groupSumBySymbole(opCompta,['ref'],['qte']);//on s'en fout vraiment du deuxieme parametre car ce ke lon recherche c le nombre individuel de reference dans opCompta
+            console.log("totalOP "+totalOp.length);
+            let workbook=new Excel.Workbook();
+            workbook.creator='NFINAPP';
+            workbook.lastModifierdBy='NFINAPP';
+            workbook.created=new Date();
+            workbook.modified = new Date();
+            workbook.properties.date1904=true;
+            workbook.views=[{
+                x:0,y:0,width:10000,height:20000,firstSheet:0,activeTab:1,visibility:'visible'
+            }];
+            let sheets=[];//creer une feuille par operation selon la reference
+           // console.dir(totalOp);
+            if(totalOp[0] != undefined){
+                let finalArr=[];
+                let trueFinalArr=[];
+                totalOp.map((e,i,arr)=>{
+                    let name="Feuille "+(++i);
+                    sheets.push(workbook.addWorksheet(name));
+                    //on trie et on cree un tableau de tableaux
+                   finalArr.push(opCompta.filter((el)=>{
+                        return el.ref===e.ref?el:null;
+                    }));
+                });
+              
+                sheets.forEach((worksheet)=>{
+                     worksheet.columns=[{
+                        header:'update_columns',
+                        key:'UC',
+                        width:20
+                    },{
+                        header:'account',
+                        key:'ACC',
+                        width:20 
+                    },{
+                        header:'ext_inv_ref',
+                        key:'EIR',
+                        width:20 
+                    },{
+                        header:'voucher_date',
+                        key:'VD',
+                        width:20 
+                    },{
+                        header:'Cur_amount',
+                        key:'CA',
+                        width:20 
+                    },{
+                        header:'dc_flag',
+                        key:'DCF',
+                        width:20 
+                    },{
+                        header:'amount',
+                        key:'AM',
+                        width:20 
+                    },{
+                        header:'description',
+                        key:'DES',
+                        width:20 
+                    },{
+                        header:'dim_1',
+                        key:'D1',
+                        width:20 
+                    },{
+                        header:'dim_6',
+                        key:'D2',
+                        width:20 
+                    }];
+                });
+                
+
+                //console.log("lheader du sheet 0 column 3"+sheets[0].getColumn(3).header)
+                workbook.eachSheet((worksheet,sheetId)=>{
+                    console.log("sheetId "+sheetId);
+                   finalArr[--sheetId].forEach((e,i,arr)=>{
+                       //insertion par feuille
+                      worksheet.addRow({
+                          UC:"update_data",
+                          ACC:e.compte.compte,
+                          EIR:e.ref,VD:moment(e.date).format("DD/MM/YY"),
+                          CA:e.ou==="C"?-e.montant:e.montant,
+                          DCF:e.ou==="C"?-1:1,
+                          AM:e.ou==="C"?-e.montant:e.montant,
+                          DES:e.libelle,
+                          D1:e.ou==="D"?e.compte.type==="BANK"?"DVD":300:"",
+                          D2:e.ou==="C"?e.compte.type==="BANK"?"DVD":300:""
+
+                        });
+                        //console.dir(e);
+                   });
+                   
+                });
+                //process.env.PWD+"/FICHIERS/AGRESSO_FILE"+Date.now()
+                //console.dir(workbook);
+                //let buffer=new streamBuffers.WritableStreamBuffer();
+                workbook.xlsx.writeBuffer()//on transforme le tout en un blob que lon renverra au client pour telecharger via filesaver
+                .then(function(e) {
+                   // console.dir(e);
+                    console.log("xls file is written.");
+                    fut['return'](e)
+                    
+                    //return buffer.getContents();
+                });
+                
+            }
+            return fut.wait();
+        },
         addToComptesFin(values){
             ComptesFinanciers.insert({
                 type:values.type,
@@ -806,7 +1181,7 @@ export default ()=>{
                     //console.dir(e);
                     let codop=e.CODE_OPERATION;
                     let temp={};
-                    
+                    let dateAchatFormatted=convertInDateObjFromFrenchDate(transformInFrenchDate(e.DATE_ACHAT_DES_TITRES));
                      //---------GESTION DE LA PARTIE DEBIT---------------------------//
                     //Achat d'action
                     if(codop.indexOf('T10')!==-1 && codop.substring(0,1)=="T"){
@@ -817,6 +1192,7 @@ export default ()=>{
                                return obj.type==="AC"
                            });
                            compte=compte[0];
+                           
                             temp.compte=compte;
                             temp.libelle="Acquisition de "+e.QUANTITE+" actions "+e.VALEUR;
                             temp.libelleS="Acquisiton de "+e.QUANTITE+" actions "+e.VALEUR,
@@ -825,13 +1201,15 @@ export default ()=>{
                             temp.ref=parseInt(e.REFERENCE);
                             temp.ou="D";
                             temp.qte=e.QUANTITE;
+                            temp.date=dateAchatFormatted;
                             temp.typeOp="AAC";
                             temp.indexOP=i;
                            //FIFO on verifie que cette ligne n'existe pas deja dans l'inventaire si elle existe on skip
-                           let dateAchatFormatted=convertInDateObjFromFrenchDate(transformInFrenchDate(e.DATE_ACHAT_DES_TITRES));
+                           
 
                            console.log("===== Date Achat en francais "+dateAchatFormatted);
                            let existInFIFO=Inventaire.findOne({DateAcquisition:dateAchatFormatted,reference:temp.ref,Symbole:e.SYMBOLE,PrixUnitaire:e.PRIX_UNITAIRE,Quantite:e.QUANTITE});
+                           
                            if(!existInFIFO){
                               
                                
@@ -846,9 +1224,24 @@ export default ()=>{
                                 Symbole:e.SYMBOLE,
                                 reference:temp.ref,
                                 lastTypeOp:'AAC',
+                                IsFractionned:false,
                                 type:"ACTIONS"
 
                                });
+                               //Archivage de l'achat dans HistoriqueFIFO
+                                TempHistoFIFO.insert({
+                                    Valeur:e.VALEUR,
+                                    Date:dateAchatFormatted,
+                                    typeop:'ACHAT',
+                                    Quantite:e.QUANTITE,
+                                    prixVente:0,
+                                    prixAchat:e.PRIX_UNITAIRE,
+                                    ValBilan:valbilan,
+                                    PMvalue:0,
+                                    Symbole:e.SYMBOLE,
+                                    ref:parseInt(e.REFERENCE),
+                                    type:'ACTIONS'
+                                });
                            }
                         }
                         else if((codop.indexOf('T102')!==-1||codop.indexOf('T103')!==-1||codop.indexOf('T104')!==-1||codop.indexOf('T105')!==-1) && codop.substring(0,1)=="T"){
@@ -865,6 +1258,7 @@ export default ()=>{
                                 temp.ref=parseInt(e.REFERENCE,10);
                                 temp.ou="D";
                                 temp.qte=e.QUANTITE;
+                                temp.date=dateAchatFormatted;
                                 temp.typeOp="FRAAC";
                                 temp.indexOP=i;
                                 
@@ -891,6 +1285,7 @@ export default ()=>{
                             temp.ref=parseInt(e.REFERENCE,10);
                             temp.ou="D";
                             temp.qte=e.QUANTITE;
+                            temp.date=dateAchatFormatted;
                             temp.typeOp="VAC";
                             temp.indexOP=i;
 
@@ -914,6 +1309,7 @@ export default ()=>{
                                 temp.ref=parseInt(e.REFERENCE,10);
                                 temp.ou="D";
                                 temp.qte=e.QUANTITE;
+                                temp.date=dateAchatFormatted;
                                 temp.typeOp="FRVAC";
                                 temp.indexOP=i;
                                
@@ -964,6 +1360,7 @@ export default ()=>{
                                 ref:e.ref,
                                 ou:'C',
                                 qte:e.qte,
+                                date:e.date,
                                 typeOp:e.typeOp,
                                 indexOp:e.indexOp,
                                 
@@ -1006,6 +1403,7 @@ export default ()=>{
                                 ref:e.ref,
                                 ou:'C',
                                 qte:e.qte,
+                                date:e.date,
                                 typeOp:e.typeOp,
                                 indexOp:e.indexOp,
                                

@@ -10,8 +10,8 @@ import {Field,reduxForm,formValueSelector} from 'redux-form';
 import Dialog from 'material-ui/Dialog';
 import {FilesCollection} from 'meteor/ostrio:files';
 import FlatButton from 'material-ui/FlatButton';
-import {Meteor} from 'meteor/meteor'
-import {FichiersOP} from '../../api/collections';
+import {Meteor} from 'meteor/meteor';
+import {FichiersOP,HistoriqueR} from '../../api/collections';
 import {decoupagedone,releverOk} from '../../redux/actions/relever-actions';
 import {snapInvent} from '../../redux/actions/inventaire-actions';
 import RelevTable from './RelevTable.jsx';
@@ -142,7 +142,32 @@ const styles={
                     onTouchTap={()=>{
                         //On cherche a savoir si l'on a assez de stock pour pouvoir vendre sinon le relever est errone
                         let rel=this.state.decoupage;
-                        if(rel.legnth||rel!=undefined){
+                        if(rel.length||rel!=undefined){
+                           let i=HistoriqueR.findOne({
+                                DATE_ACHAT_DES_TITRES:rel[0].DATE_ACHAT_DES_TITRES,
+                                DATE_RECEPTION_DES_TITRES:rel[0].DATE_RECEPTION_DES_TITRES,
+                                REFERENCE:rel[0].REFERENCE,
+                                CODE_OPERATION:rel[0].CODE_OPERATION,
+                                SYMBOLE:rel[0].SYMBOLE,
+                                CODE_ISIN:rel[0].CODE_ISIN,
+                                MONTANT_TOTAL:rel[0].MONTANT_TOTAL,
+                                QUANTITE:rel[0].QUANTITE,
+                                LIBELLE_OPERATION:rel[0].LIBELLE_OPERATION,
+                                PRIX_UNITAIRE:rel[0].PRIX_UNITAIRE,
+                            });
+                           // console.log(typeof i);
+                            
+                            //console.dir(i);
+                            if(i){
+                                this.setState({
+                                        error:true,
+                                        showLoader:false,
+                                        errorMsg:"Veuillez vérifier le relevé ou le changer car les opérations qu'il comporte ont déjà été intégrées le "+moment(i.DATE_RELEVER).format("DD/MM/YYYY")+" par l'utilisateur "+i.PAR
+                                    });
+                                    this._dialogOpen();
+                                    return;
+                                
+                            }
                             let arrSym=[],invArr=[];
                             rel.map((e)=>{
                                 if(e.CODE_OPERATION==="T200"){
@@ -151,7 +176,8 @@ const styles={
                                
                             });
                             invArr=Inventaire.find().fetch();
-                            if(invArr.length<0){
+                            //alert(invArr[0]);
+                            if(invArr[0]===undefined||typeof invArr[0] ===undefined){
                                 this.setState({
                                         error:true,
                                         showLoader:false,
@@ -162,12 +188,16 @@ const styles={
                             }
                             arrSym=groupSumBySymbole(arrSym,["symbole"],["qte"]);
                             invArr=groupSumBySymbole(invArr,["Symbole"],["Quantite"]);
+                            
+                            console.log(this.state.error);
                             //alert("arrSym/"+JSON.stringify(arrSym));
                             //alert("invArr/"+JSON.stringify(invArr));
                            if(arrSym!=undefined && arrSym.length>0){ 
                                arrSym.forEach((e)=>{
                                 let inv=R.filter(R.where({'Symbole':R.contains(e.symbole)}))(invArr);
-                                if(e.qte>inv[0].Quantite){
+                                
+                                
+                                 if(e.qte>inv[0].Quantite){
                                     this.setState({
                                         error:true,
                                         showLoader:false,
@@ -175,6 +205,7 @@ const styles={
                                     });
                                     this._dialogOpen();
                                 }else{
+                                    
                                     this.setState({
                                         error:false,
                                         showLoader:true,
