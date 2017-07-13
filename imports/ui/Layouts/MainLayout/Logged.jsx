@@ -29,6 +29,7 @@ import {Session} from 'meteor/session';
    }
     render(){
         console.dir("user loggs "+Meteor.userId());
+        //Deconnection et menu ADMIN
         if(store.getState().administrateurAction.adminConnected){
             return(
             <IconMenu 
@@ -50,10 +51,10 @@ import {Session} from 'meteor/session';
             </IconMenu> 
             );
         }else if(Meteor.userId()){
-            
+            //MENU USER
             const{data,dispatch}=this.props;
                  if(typeof data.user!=="undefined")
-                {
+                {//MENU USER EN CONSULTATION
                     store.dispatch(userconnected(data.user[0]));
                     Session.set("userRole",data.user[0].role);
                     Session.set("canshow",true);
@@ -77,6 +78,7 @@ import {Session} from 'meteor/session';
                     );
                 }
                     else if(data.user[0].role==="G"){
+                        //MENU USER EN GESTIONNAIRE
                          return(
 
                         <IconMenu 

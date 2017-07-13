@@ -30,6 +30,54 @@ Array.prototype.groupBy=function(prop){
     },{});
 }
 
+
+function remplirFeuilleControl(sheets){
+    sheets[0].addRow(['*',"Control Worksheet (NB any row with a '*' as the first character in column A is ignored)",""]);
+    sheets[0].addRow();
+    sheets[0].addRow();
+    sheets[0].addRow(["*","Global Parameters (setdefault will be used unless parameter of same name is passed in from Agresso)"]);
+    sheets[0].addRow(['*',"Parameter","Value"]);
+    sheets[0].addRow(['setdefault',"client","F3"]);
+    sheets[0].addRow(['setdefault',"period","201607"]);
+    sheets[0].addRow(['set',"user_id","upgr55"]);
+    sheets[0].addRow(['set',"batch_id","PB05"]);
+    sheets[0].addRow(['set',"interface","BI"]);
+    sheets[0].addRow(['set',"trans_type","GL"]);
+    sheets[0].addRow(['set',"voucher_type","C2"]);
+    sheets[0].addRow(['set',"voucher_date",moment(new Date()).format("DD/MM/YYYY")]);
+    sheets[0].addRow(['set',"variant_number"]);
+    sheets[0].addRow(['set',"currency","XOF"]);
+    sheets[0].addRow();
+    sheets[0].addRow();
+    sheets[0].addRow();
+    sheets[0].addRow();
+    sheets[0].addRow(["*","setnum allows use of arithmetic expressions on parameters"]);
+    sheets[0].addRow(["*setnum","year","<period> \ 100"]);
+    sheets[0].addRow(["*setnum","pyear","<year> - 1"]);
+    sheets[0].addRow(["*setnum","period0","<year> * 100"]);
+    sheets[0].addRow();
+    sheets[0].addRow(["*","setperiod allows use of arithmetic expressions on period parameters"]);
+    sheets[0].addRow(["*","e.g. set previous 12 periods for a rolling 12 month crosstab by period"]);
+    sheets[0].addRow(["*setperiod","period1","<period> - 11"]);
+    sheets[0].addRow(["*setperiod","period2","<period> - 10"]);
+    sheets[0].addRow(["*setperiod","period3","<period> - 9"]);
+    sheets[0].addRow(["*setperiod","period4","<period> - 8"]);
+    sheets[0].addRow(["*setperiod","period5","<period> - 7"]);
+    sheets[0].addRow(["*setperiod","period6","<period> - 6"]);
+    sheets[0].addRow(["*setperiod","period7","<period> - 5"]);
+    sheets[0].addRow(["*setperiod","period8","<period> - 4"]);
+    sheets[0].addRow(["*setperiod","period9","<period> - 3"]);
+    sheets[0].addRow(["*setperiod","period10","<period> - 2"]);
+    sheets[0].addRow(["*setperiod","period11","<period> - 1"]);
+    sheets[0].addRow(["*set","period12","<period>"]);
+    sheets[0].addRow();
+    sheets[0].addRow();
+    sheets[0].addRow();
+    sheets[0].addRow(["*","Worksheet Directory"]);
+    sheets[0].addRow(["*","Sheet Name","Template Name","Local Parameters","Insert Strings"]);
+}
+
+
 function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi un array d'objet avec la plus ou moins value
      //FIFO on verifie que cette ligne n'existe pas deja dans l'inventaire si elle existe on skip
                            // console.log("=====tableauRes au debut de la fonction comptaMVPV========")
@@ -677,7 +725,13 @@ export default ()=>{
             }];
             let sheets=[];//creer une feuille par operation selon la reference
            // console.dir(totalOp);
+           
             if(totalOp[0] != undefined){
+                //TODO creer la feuille de _control pour integration dans le logiciel Agresso
+                sheets.push(workbook.addWorksheet("_control"));
+                remplirFeuilleControl(sheets);
+
+                //***fin generation de la feuille _control */
                 let finalArr=[];
                 let trueFinalArr=[];
                 totalOp.map((e,i,arr)=>{
@@ -689,71 +743,78 @@ export default ()=>{
                     }));
                 });
               
-                sheets.forEach((worksheet)=>{
-                     worksheet.columns=[{
-                        header:'update_columns',
-                        key:'UC',
-                        width:20
-                    },{
-                        header:'account',
-                        key:'ACC',
-                        width:20 
-                    },{
-                        header:'ext_inv_ref',
-                        key:'EIR',
-                        width:20 
-                    },{
-                        header:'voucher_date',
-                        key:'VD',
-                        width:20 
-                    },{
-                        header:'Cur_amount',
-                        key:'CA',
-                        width:20 
-                    },{
-                        header:'dc_flag',
-                        key:'DCF',
-                        width:20 
-                    },{
-                        header:'amount',
-                        key:'AM',
-                        width:20 
-                    },{
-                        header:'description',
-                        key:'DES',
-                        width:20 
-                    },{
-                        header:'dim_1',
-                        key:'D1',
-                        width:20 
-                    },{
-                        header:'dim_6',
-                        key:'D2',
-                        width:20 
-                    }];
+                sheets.forEach((worksheet,i,arr)=>{
+                       if(i!=0){
+                                worksheet.columns=[{
+                                header:'update_columns',
+                                key:'UC',
+                                width:20
+                            },{
+                                header:'account',
+                                key:'ACC',
+                                width:20 
+                            },{
+                                header:'ext_inv_ref',
+                                key:'EIR',
+                                width:20 
+                            },{
+                                header:'voucher_date',
+                                key:'VD',
+                                width:20 
+                            },{
+                                header:'Cur_amount',
+                                key:'CA',
+                                width:20 
+                            },{
+                                header:'dc_flag',
+                                key:'DCF',
+                                width:20 
+                            },{
+                                header:'amount',
+                                key:'AM',
+                                width:20 
+                            },{
+                                header:'description',
+                                key:'DES',
+                                width:20 
+                            },{
+                                header:'dim_1',
+                                key:'D1',
+                                width:20 
+                            },{
+                                header:'dim_6',
+                                key:'D2',
+                                width:20 
+                            }];
+                    }
                 });
                 
 
                 //console.log("lheader du sheet 0 column 3"+sheets[0].getColumn(3).header)
+               // console.log(finalArr);
+               let index=0;
                 workbook.eachSheet((worksheet,sheetId)=>{
-                    console.log("sheetId "+sheetId);
-                   finalArr[--sheetId].forEach((e,i,arr)=>{
-                       //insertion par feuille
-                      worksheet.addRow({
-                          UC:"update_data",
-                          ACC:e.compte.compte,
-                          EIR:e.ref,VD:moment(e.date).format("DD/MM/YY"),
-                          CA:e.ou==="C"?-e.montant:e.montant,
-                          DCF:e.ou==="C"?-1:1,
-                          AM:e.ou==="C"?-e.montant:e.montant,
-                          DES:e.libelle,
-                          D1:e.ou==="D"?e.compte.type==="BANK"?"DVD":300:"",
-                          D2:e.ou==="C"?e.compte.type==="BANK"?"DVD":300:""
+                    
+                    if(worksheet.name!='_control'){
+                        console.log("typeof de finalarr["+--sheetId+"] = "+typeof finalArr);
+                        finalArr[index].forEach((e,i,arr)=>{
+                        //insertion par feuille
+                        worksheet.addRow({
+                            UC:"update_data",
+                            ACC:e.compte.compte,
+                            EIR:e.ref,VD:moment(e.date).format("DD/MM/YY"),
+                            CA:e.ou==="C"?-e.montant:e.montant,
+                            DCF:e.ou==="C"?-1:1,
+                            AM:e.ou==="C"?-e.montant:e.montant,
+                            DES:e.libelle,
+                            D1:e.ou==="D"?e.compte.type==="BANK"?"DVD":302:"",
+                            D2:e.ou==="C"?e.compte.type==="BANK"?"DVD":302:""
 
-                        });
-                        //console.dir(e);
-                   });
-                   
+                            });
+                            //console.dir(e);
+                    });
+                    index++;
+                    }
                 });
                 //process.env.PWD+"/FICHIERS/AGRESSO_FILE"+Date.now()
                 //console.dir(workbook);
@@ -766,7 +827,7 @@ export default ()=>{
                     
                     //return buffer.getContents();
                 });
-                
+               //return finalArr; 
             }
             return fut.wait();
         },

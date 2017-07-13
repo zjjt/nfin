@@ -68,6 +68,7 @@ let FichiersInv=new FilesCollection({
 
 let TempReleve=new Mongo.Collection('TempReleve');
 let Inventaire=new Mongo.Collection('Inventaire');
+let TempInventaire=new Mongo.Collection('TempInventaire');
 let InventaireBackup=new Mongo.Collection('InventaireBackup');
 let ComptesFinanciers=new Mongo.Collection('ComptesFinanciers');
 let SGI=new Mongo.Collection('SGI');

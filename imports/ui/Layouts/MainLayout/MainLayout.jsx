@@ -82,6 +82,7 @@ export default class MainLayout extends Component{
 		}
 	}
 	componentDidMount(){
+		
 		if(Meteor.user()){
 			this.setState({
 				loggedIn:false

@@ -49,6 +49,8 @@ class AfterCompta extends Component {
     }
 
     componentDidMount(){
+        //On empeche l'utilisateur de fuir
+        
         
         $('.toolbarTitle').delay(18000).show().addClass("fadeInRight animated");
         $('.animAppBar1').addClass("animated fadeInLeft");
@@ -155,10 +157,9 @@ class AfterCompta extends Component {
                            //on efface l'inventaire actuel et on le remplace par le snap dans redux
                                 Meteor.call('dropInventory',(err,res)=>{
                                     Meteor.call('chargeInvWithSnap',fifoSnap,()=>{
-                                        FlowRouter.go('dashboard');
                                     });
                                 });
-                           
+                                FlowRouter.go('dashboard');
                        }else if(this.state.dtitle==="Validez vous les résultats ?"){
                            this._dialogClose();
                            const{fifoSnap,releve}=this.props;
@@ -185,6 +186,7 @@ class AfterCompta extends Component {
                              Meteor.call("exportToExcelAgresso",this.props.opCompta,(err,res)=>{
                                 if(res){
                                     alert("Votre fichier sera téléchargé automatiquement...");
+                                    console.dir(res);
                                     const blob=new Blob([res],{
                                         type:'application/octet-stream'
                                     });
