@@ -19,7 +19,7 @@ import Wallet from '../../ui/containers/Wallet.jsx';
 import HistoFIFO from '../../ui/containers/HistoFIFO.jsx';
 import ComptesFin from '../../ui/containers/ComptesFin.jsx';
 import injectTapEventPlugin from 'react-tap-event-plugin';
-import {FichiersInv,Inventaire,ComptesFinanciers} from '../../api/collections.js';
+import {FichiersInv,Inventaire,ComptesFinanciers,IsTraiting} from '../../api/collections.js';
 import {Session} from 'meteor/session';
 
 injectTapEventPlugin();
@@ -118,6 +118,9 @@ FlowRouter.route('/dashboard/comptes-financiers-modification/',{
 				}else if(Meteor.user()){
 					alert("Aucune base de donnees des comptes financiers détecté !!!");
 					redirect('/dashboard/');
+				}else if(IsTraiting.find().count()){
+					alert("Un traitement est actuellement en cours veuillez patientez !!!");
+					redirect('/dashboard/');
 				}
 		}
 	}],
@@ -137,6 +140,9 @@ FlowRouter.route('/dashboard/wallet/',{
 					redirect('/');
 				}else if(Meteor.user()){
 					redirect('/dashboard/insert-wallet/');
+				}else if(IsTraiting.find().count()){
+					alert("Un traitement est actuellement en cours veuillez patientez !!!");
+					redirect('/dashboard/');
 				}
 		}
 		
@@ -157,6 +163,9 @@ FlowRouter.route('/dashboard/insert-wallet/',{
 					redirect('/');
 				}else if(Meteor.user()){
 					redirect('/dashboard/wallet/');
+				}else if(IsTraiting.find().count()){
+					alert("Un traitement est actuellement en cours veuillez patientez !!!");
+					redirect('/dashboard/');
 				}
 			}	
 	}],
@@ -171,6 +180,9 @@ FlowRouter.route('/dashboard/treatOps',{
 	triggersEnter:[(context,redirect)=>{
 		if(!Meteor.user()){
 			redirect('/');
+		}else if(IsTraiting.find().count()){
+			alert("Un traitement est actuellement en cours veuillez patientez !!!");
+			redirect('/dashboard/');
 		}
 	}],
 	action(){
@@ -218,6 +230,9 @@ FlowRouter.route('/admin/dashboard/create_user',{
 		console.log(isAdminConnected);
 		if(!isAdminConnected){
 			redirect('/admin');
+		}else if(IsTraiting.find().count()){
+			alert("Un traitement est actuellement en cours veuillez patientez !!!");
+			redirect('/admin/dashboard/');
 		}
 	}],
 	action(){
@@ -232,6 +247,9 @@ FlowRouter.route('/admin/dashboard/list_user',{
 		console.log(isAdminConnected);
 		if(!isAdminConnected){
 			redirect('/admin');
+		}else if(IsTraiting.find().count()){
+			alert("Un traitement est actuellement en cours veuillez patientez !!!");
+			redirect('/admin/dashboard/');
 		}
 	}],
 	action(){

@@ -198,7 +198,7 @@ toggleTextandExpand()
                     </Table>
                      <div className="loadmoreDiv" >
                         <RaisedButton
-                            label="Exporter vers excel"
+                            label="Proceder à la sauvegarde et à l'extraction des données"
                             labelColor="white"
                             backgroundColor="#cd9a2e"
                             onClick={()=>{dispatch(toutEstValid())}}

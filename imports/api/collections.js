@@ -70,10 +70,11 @@ let TempReleve=new Mongo.Collection('TempReleve');
 let Inventaire=new Mongo.Collection('Inventaire');
 let TempInventaire=new Mongo.Collection('TempInventaire');
 let InventaireBackup=new Mongo.Collection('InventaireBackup');
+let IsTraiting=new Mongo.Collection('IsTraiting');
 let ComptesFinanciers=new Mongo.Collection('ComptesFinanciers');
 let SGI=new Mongo.Collection('SGI');
 let HistoriqueR=new Mongo.Collection('HistoriqueR');
 let HistoriqueFIFO=new Mongo.Collection('HistoriqueFIFO');
 let TempHistoFIFO=new Mongo.Collection('TempHistoFIFO');
 
-export {FichiersOP,FichiersInv,TempReleve,Inventaire,InventaireBackup,SGI,HistoriqueR,HistoriqueFIFO,TempHistoFIFO,ComptesFinanciers};
+export {IsTraiting,TempInventaire,FichiersOP,FichiersInv,TempReleve,Inventaire,InventaireBackup,SGI,HistoriqueR,HistoriqueFIFO,TempHistoFIFO,ComptesFinanciers};

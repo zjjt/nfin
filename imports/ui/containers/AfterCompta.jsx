@@ -155,7 +155,7 @@ class AfterCompta extends Component {
                     onTouchTap={()=>{
                        if(this.state.dtitle==="Quitter la page ?"){
                            //on efface l'inventaire actuel et on le remplace par le snap dans redux
-                                Meteor.call('dropInventory',(err,res)=>{
+                                Meteor.call('dropTempInventory',(err,res)=>{
                                     Meteor.call('chargeInvWithSnap',fifoSnap,()=>{
                                     });
                                 });
@@ -198,9 +198,10 @@ class AfterCompta extends Component {
                                     document.body.appendChild(a);
                                     a.click();
                                     document.body.removeChild(a);
-                                    FlowRouter.go("dashboard");
+                                    
                                 }
-                            }); 
+                            });
+                            FlowRouter.go("dashboard"); 
                        }
                         
                     }}

@@ -18,7 +18,7 @@ import MenuItem from 'material-ui/MenuItem';
 import {miseajourDispo} from '../../redux/actions/user-actions.js'
 import LinearProgress from 'material-ui/LinearProgress';
 import {Meteor} from 'meteor/meteor';
-import {Inventaire} from '../../api/collections.js';
+import {TempInventaire} from '../../api/collections.js';
 import {createContainer} from 'meteor/react-meteor-data';
 import {formatNumberInMoney} from '../../utils/utils.js';
 
@@ -260,15 +260,15 @@ AfterComptaInv.propTypes={
 };
 
 export default createContainer(()=>{
-    const invhandle=Meteor.subscribe('inventaireTitre');
+    const invhandle=Meteor.subscribe('tempinventaireTitre');
     const loading=!invhandle.ready();
-    const invone=Inventaire.findOne({type:"ACTIONS"});
+    const invone=TempInventaire.findOne({type:"ACTIONS"});
     const invExist=!loading && !!invone;
     return{
         loading,
         invone,
         invExist,
-        inventaire:invExist? Inventaire.find({},{sort:{DateAcquisition:1}}).fetch():[],
+        inventaire:invExist? TempInventaire.find({},{sort:{DateAcquisition:1}}).fetch():[],
     };
 },AfterComptaInv);
 /*const getInventory=gql`

@@ -1,6 +1,6 @@
 import {Meteor} from 'meteor/meteor';
 import {DBSQLITE,DBSQLSERVER} from './connectors.js';
-import {Inventaire,HistoriqueFIFO,InventaireBackup} from '../collections.js'; 
+import {Inventaire,HistoriqueFIFO,InventaireBackup,TempInventaire} from '../collections.js'; 
 import Sequelize from 'sequelize';
 
 DBSQLSERVER.sync();
@@ -45,6 +45,40 @@ const resolvers={
             }else if(args.type==="ALL" && (args.search||args.search!=="")) {
                 Inventaire.remove({DateAcquisition:""});
                 return Inventaire.find({Valeur:{$regex:args.search.toUpperCase()}},{sort:{DateAcquisition:1}}).fetch();
+            }
+            
+            /*if(args.type==="A" && (!args.search||args.search==="")){
+                //if on veut les actions
+                return Meteor.call('getInventory','A','',()=>{});
+            }else if(args.type==="O"&& (!args.search||args.search==="")){
+                //if on veut les obligations
+                return Inventaire.find({type:"OBLIGATIONS"}).fetch();
+            }else if((args.type==="A"||args.type==="O"||args.type==="ALL") && (args.search || args.search!=="")){
+                return Inventaire.find({Valeur:/args.search/});
+            }else if(args.type==="ALL" && (!args.search||args.search==="")){
+                console.log(typeof Inventaire);
+                return Inventaire.find({}).fetch();
+            }*/
+        },
+        tempinventaire(_,args){
+            if(args.type==="A" && (!args.search||args.search==="")){
+                TempInventaire.remove({DateAcquisition:""});
+                return TempInventaire.find({type:"ACTIONS"},{sort:{DateAcquisition:1}}).fetch();
+            }else if(args.type==="A" && (args.search||args.search!=="")) {
+                TempInventaire.remove({DateAcquisition:""});
+                return TempInventaire.find({type:"ACTIONS",Valeur:{$regex:args.search.toUpperCase()}},{sort:{DateAcquisition:1}}).fetch();
+            }else if(args.type==="O" && (!args.search||args.search==="")) {
+                TempInventaire.remove({DateAcquisition:""});
+                return TempInventaire.find({type:"OBLIGATIONS"}).fetch();
+            }else if(args.type==="O" && (args.search||args.search!=="")) {
+                TempInventaire.remove({DateAcquisition:""});
+                return TempInventaire.find({type:"OBLIGATIONS",Valeur:{$regex:args.search.toUpperCase()}},{sort:{DateAcquisition:1}}).fetch();
+            }else if(args.type==="ALL" && (!args.search||args.search==="")) {
+                TempInventaire.remove({DateAcquisition:""});
+                return TempInventaire.find({},{sort:{DateAcquisition:1}}).fetch();
+            }else if(args.type==="ALL" && (args.search||args.search!=="")) {
+                TempInventaire.remove({DateAcquisition:""});
+                return TempInventaire.find({Valeur:{$regex:args.search.toUpperCase()}},{sort:{DateAcquisition:1}}).fetch();
             }
             
             /*if(args.type==="A" && (!args.search||args.search==="")){

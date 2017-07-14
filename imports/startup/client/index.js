@@ -1,9 +1,15 @@
 import './routes';
 import {Inventaire} from '../../api/collections.js';
-import {meteor} from 'meteor/meteor'
+import {Meteor} from 'meteor/meteor'
 
 Meteor.startup(()=>{
-    
+    //on vide les collections temporaires
+    Meteor.call("clearTemps",(err,res)=>{
+        if(!res){
+            alert("Veuillez patienter un traitement est en cours...")
+        }
+    });
+    //-------------------
     WebFontConfig={
         google:{families:['Roboto:400,300,500:latin']}
     };

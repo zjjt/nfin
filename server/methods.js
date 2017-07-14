@@ -5,7 +5,7 @@ import {DBSQLITE,DBSQLSERVER} from '../imports/api/graphql/connectors.js';
 import {moment} from 'meteor/momentjs:moment';
 //import Excel from 'exceljs';
 import LineByLineReader from 'line-by-line';
-import {TempReleve,SGI,ComptesFinanciers,TempHistoFIFO,FichiersInv,Inventaire,HistoriqueFIFO,HistoriqueR,InventaireBackup} from '../imports/api/collections.js';
+import {IsTraiting,TempInventaire,TempReleve,SGI,ComptesFinanciers,TempHistoFIFO,FichiersInv,Inventaire,HistoriqueFIFO,HistoriqueR,InventaireBackup} from '../imports/api/collections.js';
 import Future from 'fibers/future';
 import {arrAreSame,transformInFrenchDate,groupByLibel,groupSumBySymbole,convertInDateObjFromFrenchDate} from '../imports/utils/utils.js';
 //import {Baby} from 'meteor/modweb:baby-parse';
@@ -89,7 +89,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                             let COMPTES=ComptesFinanciers.find().fetch();
                            let dateAchatFormatted=convertInDateObjFromFrenchDate(transformInFrenchDate(e.DATE_ACHAT_DES_TITRES));
                            //console.log("===== Date Achat en francais vente d'action "+dateAchatFormatted);
-                           let existInFIFO=Inventaire.findOne({Symbole:e.SYMBOLE},{sort:{DateAcquisition:1}});
+                           let existInFIFO=TempInventaire.findOne({Symbole:e.SYMBOLE},{sort:{DateAcquisition:1}});
                            if(existInFIFO){
                               //si l'action existe dans l'inventaire on verifie la premiere occurence de l'action dans l'inventaire
                                console.log("Le voila premier objet trouver pour la vente d'action symbole= " +e.SYMBOLE+" est: "+existInFIFO.DateAcquisition);
@@ -113,7 +113,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                     if(newQteEnStockDuPremierTrouver>0){
                                         console.log("moins value et newQte superieur a >0");
                                         let montantMV=quantiteRestante>0?(existInFIFO.PrixUnitaire-e.PRIX_UNITAIRE)*quantiteRestante : (existInFIFO.PrixUnitaire-e.PRIX_UNITAIRE)*e.QUANTITE;
-                                        Inventaire.update(existInFIFO,{
+                                        TempInventaire.update(existInFIFO,{
                                             $set:{
                                                 ValBilan:newQteEnStockDuPremierTrouver*existInFIFO.PrixUnitaire,
                                                 Quantite:newQteEnStockDuPremierTrouver,
@@ -182,7 +182,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                     }else if(newQteEnStockDuPremierTrouver<0){
                                         //enlever la ligne dont la quantite est epuisee
                                         let montantMV=(existInFIFO.PrixUnitaire-e.PRIX_UNITAIRE)*existInFIFO.Quantite;
-                                        Inventaire.remove(existInFIFO,()=>{
+                                        TempInventaire.remove(existInFIFO,()=>{
                                             //on comptabilise la moins value et la sortie de stock(vente)
                                             
                                         });
@@ -237,7 +237,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                             tableauRes.push({temp,mvpv});
                                          
                                             //on check si on a encore ce type de valeur en stock
-                                            existInFIFO=Inventaire.findOne({Symbole:e.SYMBOLE},{sort:{DateAcquisition:1}});
+                                            existInFIFO=TempInventaire.findOne({Symbole:e.SYMBOLE},{sort:{DateAcquisition:1}});
                                             if(existInFIFO){
                                                 comptaMVPV(e,index++,Math.abs(newQteEnStockDuPremierTrouver),pvmvTemp,tableauRes);
                                             }
@@ -249,7 +249,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                         let montantMV=(existInFIFO.PrixUnitaire-e.PRIX_UNITAIRE)*existInFIFO.Quantite;
                                         //console.log("MontantMV:"+montantMV);
                                         //console.dir(existInFIFO);
-                                        Inventaire.remove(existInFIFO,()=>{
+                                        TempInventaire.remove(existInFIFO,()=>{
                                             //on comptabilise la moins value et la sortie de stock(vente)
                                             
                                         });
@@ -331,7 +331,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                     if(newQteEnStockDuPremierTrouver>0){
                                         console.log("plus value et newQte superieur a 0");
                                         let montantPV=quantiteRestante>0?(e.PRIX_UNITAIRE-existInFIFO.PrixUnitaire)*quantiteRestante : (e.PRIX_UNITAIRE-existInFIFO.PrixUnitaire)*e.QUANTITE;
-                                        Inventaire.update(existInFIFO,{
+                                        TempInventaire.update(existInFIFO,{
                                             $set:{
                                                 ValBilan:newQteEnStockDuPremierTrouver*existInFIFO.PrixUnitaire,
                                                 Quantite:newQteEnStockDuPremierTrouver,
@@ -400,7 +400,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                     }else if(newQteEnStockDuPremierTrouver<0){
                                         //enlever la ligne dont la quantite est epuisee
                                         let montantPV=(e.PRIX_UNITAIRE-existInFIFO.PrixUnitaire)*existInFIFO.Quantite;
-                                        Inventaire.remove(existInFIFO,()=>{
+                                        TempInventaire.remove(existInFIFO,()=>{
                                             //on comptabilise la moins value et la sortie de stock(vente)
                                             
                                         });
@@ -455,7 +455,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                             tableauRes.push({temp,mvpv});
                                           
                                             //on check si on a encore ce type de valeur en stock
-                                            existInFIFO=Inventaire.findOne({Symbole:e.SYMBOLE},{sort:{DateAcquisition:1}});
+                                            existInFIFO=TempInventaire.findOne({Symbole:e.SYMBOLE},{sort:{DateAcquisition:1}});
                                             if(existInFIFO){
                                                 comptaMVPV(e,index++,Math.abs(newQteEnStockDuPremierTrouver),pvmvTemp,tableauRes);
                                             }
@@ -464,7 +464,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                     }else if(newQteEnStockDuPremierTrouver===0){
                                         //enlever la ligne dont la quantite est epuisee
                                         let montantPV=(e.PRIX_UNITAIRE-existInFIFO.PrixUnitaire)*existInFIFO.Quantite;
-                                        Inventaire.remove(existInFIFO,()=>{
+                                        TempInventaire.remove(existInFIFO,()=>{
                                             //on comptabilise la moins value et la sortie de stock(vente)
                                             
                                         });
@@ -533,7 +533,20 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
 }
 export default ()=>{
     Meteor.methods({
-        
+        clearTemps(){
+            //fonction appeler a chaque refresh du client pour vider les tables tampon
+            let traitementEnCours=IsTraiting.findOne({traitement:true});
+            if(!traitementEnCours){
+                TempHistoFIFO.remove({});
+                TempInventaire.remove({});
+                TempReleve.remove({});
+                IsTraiting.remove({});
+                return true;
+            }else{
+                return false;
+            }
+            
+        },
         saveChanges(fifosnap,releve){
             //TODO sauvegarder le releve comptable
             let fut=new Future();
@@ -576,7 +589,13 @@ export default ()=>{
                 }
             }
             //TODO update l'inventaire changer les lastTypeOp en INVFILE
-            Inventaire.update({lastTypeOp:{$ne:'INVFILE'}},{$set:{lastTypeOp:'INVFILE'}});
+            TempInventaire.update({lastTypeOp:{$ne:'INVFILE'}},{$set:{lastTypeOp:'INVFILE'}});
+            let tempinventory=TempInventaire.find({},{sort:{DateAcquisition:1}}).fetch();
+            Inventaire.remove({});
+            tempinventory.forEach((e,i,arr)=>{
+                Inventaire.insert(e);
+            });
+            TempInventaire.remove({});
             //TODO sauvegarder dans le backup inventaire le snap fifosnap
             //On peut avoir deux copies de l4inventaire ds cette collection
             let inv=InventaireBackup.find({},{sort:{DateInventaire:1}}).fetch();
@@ -807,8 +826,8 @@ export default ()=>{
                             DCF:e.ou==="C"?-1:1,
                             AM:e.ou==="C"?-e.montant:e.montant,
                             DES:e.libelle,
-                            D1:e.ou==="D"?e.compte.type==="BANK"?"DVD":302:"",
-                            D2:e.ou==="C"?e.compte.type==="BANK"?"DVD":302:""
+                            D1:e.ou==="D"?302:"",
+                            D2:e.ou==="C"?"DVD":""
 
                             });
                             //console.dir(e);
@@ -823,6 +842,7 @@ export default ()=>{
                 .then(function(e) {
                    // console.dir(e);
                     console.log("xls file is written.");
+                    IsTraiting.remove({});
                     fut['return'](e)
                     
                     //return buffer.getContents();
@@ -885,7 +905,7 @@ export default ()=>{
                 Symbole:values.valeur,
                 IsFractionned:false,
                 DateAcquisition:{
-                    $gte:values.date_debut_frac
+                    $lte:values.date_debut_frac
                 }}).fetch();
 
             let allActionsOld=Inventaire.find({
@@ -899,8 +919,8 @@ export default ()=>{
                         if(!e.IsFractionned){
                             //calcul selon la formule de fractionnement
 
-                            let qte=e.Quantite*10;
-                            let pu=e.PrixUnitaire/10;
+                            let qte=e.Quantite*values.taux;
+                            let pu=e.PrixUnitaire/values.taux;
                             //on met a jour la base de donnee avec l'element de fractionnement
                            // console.log(pu);
                             Inventaire.update(e,{
@@ -923,7 +943,7 @@ export default ()=>{
                     let invAfterUp=Inventaire.find({
                                     Symbole:values.valeur,
                                     DateAcquisition:{
-                                        $gte:values.date_debut_frac
+                                        $lte:values.date_debut_frac
                                     }}).fetch();
 
                     
@@ -1026,13 +1046,14 @@ export default ()=>{
             let newObj=[];
             let final=[];
             let lr=new LineByLineReader(xlfile);
-            lr.on('error',(err)=>{
+            lr.on('error',Meteor.bindEnvironment((err)=>{
+                //throw new Meteor.Error("erreurFile","Une erreur est survenue pendant le découpage du fichier.\n Veuillez vérifier que vous avez un relevé valide");
                 console.dir(err)
-            });
-            lr.on('line',(line)=>{
+            }));
+            lr.on('line',Meteor.bindEnvironment((line)=>{
                 newObj.push(line);
                // console.dir(line)
-            });
+            }));
             
             lr.on('end',Meteor.bindEnvironment(()=>{
                 newObj.forEach((element,i)=>{
@@ -1042,6 +1063,13 @@ export default ()=>{
                     let valeur="";
                     let comptable_op=(element.substring(72,85)).substring(0,1);
                     let montantMatch=element.substring(72,85).match(/([0-9]{1,})$/);
+                    if(!montantMatch){
+                        let err="Une erreur est survenue pendant le découpage du fichier.\n Veuillez vérifier que vous avez un relevé valide";
+                        fut['return'](err);
+                        throw new Meteor.Error("erreurFile","Une erreur est survenue pendant le découpage du fichier.\n Veuillez vérifier que vous avez un relevé valide");
+                       
+                        
+                    }
                     let montant_op=montantMatch[0];
                     let qte='';
                     let pu='';
@@ -1228,9 +1256,15 @@ export default ()=>{
 //-----------------COMPTABILISATION METHOD------------------------------->
         comptabilisation(rel){
             //console.dir(COMPTES);
+            IsTraiting.insert({traitement:true});
             let COMPTES=ComptesFinanciers.find().fetch();
+            let invcontent=Inventaire.find({},{sort:{DateAcquisition:1}}).fetch();
+            TempInventaire.remove({});
+            invcontent.forEach((e)=>{
+                TempInventaire.insert(e);
+            });
             if(rel.length<-1){
-                throw new Meteor.Error("Relever invalide");
+                throw new Meteor.Error("Relevé invalide");
             }else{
                 //normalement la comptabilisation doit etre elle aussi chronologique mais pour l'instant on s'occupera des actions
                 let compta;
@@ -1269,13 +1303,13 @@ export default ()=>{
                            
 
                            console.log("===== Date Achat en francais "+dateAchatFormatted);
-                           let existInFIFO=Inventaire.findOne({DateAcquisition:dateAchatFormatted,reference:temp.ref,Symbole:e.SYMBOLE,PrixUnitaire:e.PRIX_UNITAIRE,Quantite:e.QUANTITE});
+                           let existInFIFO=TempInventaire.findOne({DateAcquisition:dateAchatFormatted,reference:temp.ref,Symbole:e.SYMBOLE,PrixUnitaire:e.PRIX_UNITAIRE,Quantite:e.QUANTITE});
                            
                            if(!existInFIFO){
                               
                                
                                let valbilan=parseInt(e.QUANTITE)*parseInt(e.PRIX_UNITAIRE);
-                               Inventaire.insert({
+                               TempInventaire.insert({
                                 DateAcquisition:dateAchatFormatted,
                                 Valeur:e.VALEUR,
                                 Quantite:e.QUANTITE,
@@ -1542,8 +1576,24 @@ export default ()=>{
                             IsFractionned:false,
                             type:results.data[i].TYPE_VALEUR
                         });
+                        TempInventaire.insert({
+                            DateAcquisition:convertInDateObjFromFrenchDate(results.data[i].DATE),
+                            Valeur:results.data[i].VALEURS,
+                            Quantite:parseInt(results.data[i].Qtites,10),
+                            PrixUnitaire:parseInt(results.data[i].Nominal,10),
+                            ValBilan:parseInt(results.data[i].Qtites,10)*parseInt(results.data[i].Nominal,10),
+                            SGI:results.data[i].SGI,
+                            Symbole:results.data[i].SYMBOL,
+                            reference:parseInt(results.data[i].Reference,10),
+                            lastTypeOp:"INVFILE",
+                            IsFractionned:false,
+                            type:results.data[i].TYPE_VALEUR
+                        });
                     }
                     Inventaire.remove({
+                        Valeur:null
+                    });
+                    TempInventaire.remove({
                         Valeur:null
                     });
                 }
@@ -1559,8 +1609,20 @@ export default ()=>{
             }
            });
         },
+        dropTempInventory(){
+             
+           TempInventaire.remove({},(e,r)=>{
+            if(e){
+                throw new Meteor.Error("Une erreur s'est produite lors de la vidange de l'inventaire");
+            }else if(r){
+                return true;
+            }
+           });
+        },
         chargeInvWithSnap(fifosnap){
-            fifosnap.map((e)=>Inventaire.insert(e));
+            fifosnap.map((e)=>TempInventaire.insert(e));
+            //IsTraiting
+            IsTraiting.remove({});
         },
         getInventoryCount(){
             return Inventaire.find({}).count();

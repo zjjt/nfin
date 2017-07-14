@@ -82,7 +82,7 @@ import {$} from 'meteor/jquery';
        const {handleSubmit,pristine,submitting,dispatch,reset}=this.props;
 
        const submit=(values,dispatch)=>{
-           
+           let numberRGX=/^[0-9]+$/;
             if(values.valeur===''||!values.valeur){
                 this.setState({
                     error:true,
@@ -95,7 +95,21 @@ import {$} from 'meteor/jquery';
                     errorMsg:"Veuillez à fournir une date de fractionnement"
                 });
                 this._dialogOpen(); 
-            }           
+            } 
+            else if(values.taux===''||!values.taux){
+               this.setState({
+                   error:true,
+                    errorMsg:"Veuillez à fournir une taux de fractionnement"
+                });
+                this._dialogOpen(); 
+            }
+            else if(!values.taux.match(numberRGX)){
+               this.setState({
+                   error:true,
+                    errorMsg:"Veuillez à fournir une taux de fractionnement valide"
+                });
+                this._dialogOpen(); 
+            }             
             else{
                //alert(JSON.stringify(values));
                this.setState({
@@ -148,7 +162,7 @@ import {$} from 'meteor/jquery';
         const maxLength = max => value =>(value && value.length > max)||(value && value.length < max) ? `ce champs doit être de ${max} caractères` : undefined;
         const maxLength3=maxLength(3);
         const required = value => value ? undefined : 'Required';
-        const inventaire=groupSumBySymbole(Inventaire.find().fetch(),['Symbole'],['Quantite']);
+        const inventaire=groupSumBySymbole(Inventaire.find({},{sort:{Symbole:1}}).fetch(),['Symbole'],['Quantite']);
          const dialogActions = [
                 <FlatButton
                     label="OK"
@@ -209,7 +223,17 @@ import {$} from 'meteor/jquery';
                             }}
                             floatingLabelFixed={true}
                         />
-               
+                        <Field 
+                        name="taux" 
+                        type="number"
+                        min="1"
+                        max="100"
+                        component={TextField}
+                        hintText="Entrez taux de fractionnement désiré "
+                        floatingLabelText="Taux de fractionnement"
+                        fullWidth={true}
+                        
+                        />
 
                 <div className="inAppBtnDivMiddle" style={{}}>
                     <RaisedButton
@@ -352,10 +376,11 @@ const selector = formValueSelector('addFract');
 Formufrac = connect(
   state => {
     // or together as a group
-    const { valeur, date_debut_frac } = selector(state, 'valeur', 'date_debut_frac')
+    const { valeur, date_debut_frac,taux } = selector(state, 'valeur', 'date_debut_frac','taux')
     return {
       valeur,
-      date_debut_frac
+      date_debut_frac,
+      taux
     }
   }
 )(Formufrac)

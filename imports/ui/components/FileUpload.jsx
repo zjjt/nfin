@@ -110,10 +110,32 @@ const styles={
          const {handleSubmit,pristine,submitting,dispatch}=this.props;
         if(this.state.currentFile && this.state.decoupage.length<=0){
              Meteor.call("decoupExcel",(err,res)=>{
-                 console.dir(res);
-                        this.setState({
-                            decoupage:res
-                        });
+                // console.dir(res);
+                        if(res){
+                            //alert(typeof res)
+                            if(typeof res !== "string"){
+                                this.setState({
+                                 decoupage:res
+                             });
+                            }else{
+                                this.setState({
+                                error:true,
+                                showLoader:false,
+                                errorMsg:res
+                            });
+                            this._dialogOpen();
+                            }
+                            
+                             
+                        }else if(err){
+                            this.setState({
+                                error:true,
+                                showLoader:false,
+                                errorMsg:err.reason
+                            });
+                            this._dialogOpen();
+                        }
+                        
              });
         }
         
