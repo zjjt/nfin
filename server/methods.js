@@ -1552,7 +1552,8 @@ export default ()=>{
             }
         },
         mapInventory(){
-            const pathToFile=process.env.PWD+'/FICHIERS/inventaire/inventory.csv';
+            //let fut=new Future();
+            const pathToFile=process.env.PWD+'/FICHIERS/Inventaire/inventory.csv';
             console.log(pathToFile);
             console.dir(Baby);
             
@@ -1596,8 +1597,10 @@ export default ()=>{
                     TempInventaire.remove({
                         Valeur:null
                     });
+                    
                 }
             });
+           
         },
          dropInventory(){
              

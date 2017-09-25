@@ -31,7 +31,7 @@ react-meteor-data
 accounts-base
 accounts-password
 ultimatejs:tracker-react
-
+session
 modweb:baby-parse
 planettraining:jquery-ui-drag-resize
 meteorhacks:aggregate
