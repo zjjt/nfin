@@ -44,7 +44,7 @@ import {Session} from 'meteor/session';
                             </div>
                             
                             <div className="cardContainer fadeInRight animated">
-                                <Card className="cards" onClick={()=>{}/*()=>FlowRouter.go('upload')*/}>
+                                <Card className="cards" onClick={()=>FlowRouter.go('histoInv')}>
                                     <CardHeader 
                                         title="Historique de l'inventaire"
                                         className="cardsHeader" 

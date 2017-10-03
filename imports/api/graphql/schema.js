@@ -54,6 +54,7 @@ const schema=`
     type Query{
         user(username:String):[User]
         inventaire(type:String!,search:String,offset:Int,limit:Int):[InvItem]
+        inventaireBack(type:String!,moment:String!,search:String,offset:Int,limit:Int):[InvItem]
         tempinventaire(type:String!,search:String,offset:Int,limit:Int):[InvItem]
         histoFIFO(typeop:String,type:String!,symbole:String):[HistoInvItem]
     }

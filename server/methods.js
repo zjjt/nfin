@@ -5,15 +5,18 @@ import {DBSQLITE,DBSQLSERVER} from '../imports/api/graphql/connectors.js';
 import {moment} from 'meteor/momentjs:moment';
 //import Excel from 'exceljs';
 import LineByLineReader from 'line-by-line';
-import {IsTraiting,TempInventaire,TempReleve,SGI,ComptesFinanciers,TempHistoFIFO,FichiersInv,Inventaire,HistoriqueFIFO,HistoriqueR,InventaireBackup} from '../imports/api/collections.js';
+import {IsTraiting,TempInventaire,TempReleve,SGI,ComptesFinanciers,TempHistoFIFO,FichiersInv,Inventaire,HistoriqueFIFO,HistoriqueFIFOBackup,HistoriqueR,HistoriqueRBackup,InventaireBackup} from '../imports/api/collections.js';
 import Future from 'fibers/future';
 import {arrAreSame,transformInFrenchDate,groupByLibel,groupSumBySymbole,convertInDateObjFromFrenchDate} from '../imports/utils/utils.js';
 //import {Baby} from 'meteor/modweb:baby-parse';
 import Baby from 'babyparse';
 import {check} from 'meteor/check';
+import{Promise} from 'meteor/promise';
+import {Email} from 'meteor/email';
 import _ from 'lodash';
 const R= require('ramda');
 const streamBuffers=require("stream-buffers");
+const fs=require('fs');
 
 //const json2xls=require('json2xls');
 let Excel=require('exceljs');
@@ -533,6 +536,12 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
 }
 export default ()=>{
     Meteor.methods({
+        sendEmail(to,from,subject,text){
+            check([to],[Array]);
+            check([from,subject,text],[String]);
+            this.unblock();
+            Email.send({to,from,subject,html:text});
+        },
         clearTemps(){
             //fonction appeler a chaque refresh du client pour vider les tables tampon
             let traitementEnCours=IsTraiting.findOne({traitement:true});
@@ -549,6 +558,7 @@ export default ()=>{
         },
         saveChanges(fifosnap,releve){
             //TODO sauvegarder le releve comptable
+            let momentum=Date.now();
             let fut=new Future();
             let workbook=new Excel.Workbook();
             workbook.creator='NFINAPP';
@@ -559,6 +569,8 @@ export default ()=>{
                 workbook.views=[{
                     x:0,y:0,width:10000,height:20000,firstSheet:0,activeTab:1,visibility:'visible'
                 }];
+               
+                
             releve.forEach((e,i,arr)=>{
                 HistoriqueR.insert({
                     DATE_ACHAT_DES_TITRES:e.DATE_ACHAT_DES_TITRES,
@@ -572,11 +584,24 @@ export default ()=>{
                     LIBELLE_OPERATION:e.LIBELLE_OPERATION,
                     PRIX_UNITAIRE:e.PRIX_UNITAIRE,
                     DATE_RELEVER:new Date(),
-                    PAR:Meteor.user().fullname
+                    PAR:Meteor.user().fullname,
+                    moment:momentum
 
                 });
 
             });
+             //on fait les backup de HistoriqueR
+             let histoR=HistoriqueR.find({}).fetch();
+                console.log("length of histoR "+histoR.length)
+                if(histoR.length){
+                    histoR.map((e)=>{
+                        let found=HistoriqueRBackup.findOne(e);
+                        if(!found){
+                            HistoriqueRBackup.insert(e);
+                        }
+                        
+                    });
+                }
             //TODO sauvegarder TempHistoFIFO dans HistoriqueFIFO et vider TempHistoFIFO
             let tempHisto=TempHistoFIFO.find({},{sort:{Date:1}}).fetch();
             if(tempHisto){
@@ -584,7 +609,18 @@ export default ()=>{
                 if(!foundInHisto){
                     tempHisto.forEach((e)=>{
                         HistoriqueFIFO.insert(e);
-                    });     
+                    });   
+                    //on fait la sauvegarde de HistoriqueFIFO
+                let allHisto=HistoriqueFIFO.find({},{sort:{Date:1}}).fetch();
+                console.log("length de allHisto "+allHisto.length);
+                    allHisto.map((e)=>{
+                        let found=HistoriqueFIFOBackup.findOne(e);
+                        if(!found){
+                            if(HistoriqueFIFOBackup.insert(e)){
+                                HistoriqueFIFOBackup.update(e,{$set:{moment:momentum}});
+                            }
+                        }
+                    });  
                     TempHistoFIFO.remove({_id:{$ne:""||null}});             
                 }
             }
@@ -600,12 +636,12 @@ export default ()=>{
             //On peut avoir deux copies de l4inventaire ds cette collection
             let inv=InventaireBackup.find({},{sort:{DateInventaire:1}}).fetch();
             inv=groupSumBySymbole(inv,['moment'],['Quantite']);
+            console.log("longueur de invBack "+inv.length);
             if(inv.length>=2){
                 //on efface le plus ancien
                 
                 let oldInvback=InventaireBackup.find({moment:inv[0].moment}).fetch();
                 if(oldInvback.length){
-                    let momentum=Date.now();
                 fifosnap.forEach((e)=>{
                     InventaireBackup.insert({
                             DateAcquisition:e.DateAcquisition,
@@ -702,7 +738,7 @@ export default ()=>{
                     
             }else if(!inv.length||inv.length<2){
                 //et on insere la nouvelle sauvegarde
-                let momentum=Date.now();
+                //let momentum=Date.now();
                 console.log(momentum);
                 fifosnap.forEach((e)=>{
                     InventaireBackup.insert({
@@ -734,8 +770,8 @@ export default ()=>{
             let totalOp=groupSumBySymbole(opCompta,['ref'],['qte']);//on s'en fout vraiment du deuxieme parametre car ce ke lon recherche c le nombre individuel de reference dans opCompta
             console.log("totalOP "+totalOp.length);
             let workbook=new Excel.Workbook();
-            workbook.creator='NFINAPP';
-            workbook.lastModifierdBy='NFINAPP';
+            workbook.creator='Nsia finances application';
+            workbook.lastModifierdBy='Nsia finances application';
             workbook.created=new Date();
             workbook.modified = new Date();
             workbook.properties.date1904=true;
@@ -849,6 +885,97 @@ export default ()=>{
                 });
                //return finalArr; 
             }
+            return fut.wait();
+        },
+        extractArraysToExcel(ArrOfData,sheetNamesArr,format){
+            let fut=new Future();
+            let workbook=new Excel.Workbook();
+            workbook.creator='Nsia finances application';
+            workbook.lastModifierdBy='Nsia finances application';
+            workbook.created=new Date();
+            workbook.modified = new Date();
+            workbook.properties.date1904=true;
+            workbook.views=[{
+                x:0,y:0,width:10000,height:20000,firstSheet:0,activeTab:1,visibility:'visible'
+            }];
+            let sheets=[];
+            sheetNamesArr.forEach((e,i,arr)=>{
+                sheets.push(workbook.addWorksheet(e));
+            });
+            //-----CREATION AUTOMATIQUE DES HEADERS
+            sheets.forEach((worksheet,i,arr)=>{
+                let currentSheetHeaders=Object.keys(ArrOfData[i][0]);
+                //console.dir(currentSheetHeaders);
+                let columns=[];
+                    currentSheetHeaders.forEach((e,i,arr)=>{
+                        //****A ENLEVER DANS UNE AUTRE APPLICATION ****/
+                        if(e==="DateAcquisition")columns.push({header:"DATE",key:e.substring(0,2)+i,width:20});
+                        else if(e==="Valeur")columns.push({header:"VALEURS",key:e.substring(0,2)+i,width:20});
+                        else if(e==="Quantite")columns.push({header:"Qtites",key:e.substring(0,2)+i,width:20});
+                        else if(e==="PrixUnitaire")columns.push({header:"Nominal",key:e.substring(0,2)+i,width:20});
+                        else if(e==="ValBilan")columns.push({header:"VAL. Bilan",key:e.substring(0,2)+i,width:20});
+                        else if(e==="Symbole")columns.push({header:"SYMBOL",key:e.substring(0,2)+i,width:20});
+                        else if(e==="reference")columns.push({header:"Reference",key:e.substring(0,2)+i,width:20});
+                        else if(e==="type")columns.push({header:"TYPE_VALEUR",key:e.substring(0,2)+i,width:20});
+                        else columns.push({header:e,key:e.substring(0,2)+i,width:20});
+                    }); 
+                    //****A ENLEVER DANS UNE AUTRE APPLICATION ****/
+
+                  //  console.dir(columns);
+                    worksheet.columns=columns;    
+                });
+            //--------------------------------------
+            //-----REMPLIR LES LIGNES DU TABLEAU PAR FEUILLE
+                workbook.eachSheet((worksheet,sheetId)=>{
+                    //sheetId commence toujours a 1
+                    //console.dir(ArrOfData[--sheetId]);
+                    ArrOfData[--sheetId].map((e,i,arr)=>{
+                        let array=Object.values(e);
+                        let finalArr=array.map((e)=>{
+                            if(typeof e =="string" && e.indexOf("Greenwich")>0)
+                            {
+                                let dateObj=new Date(e);
+                                let momentObj=moment(dateObj);
+                                let finalDate=momentObj.format("DD/MM/YYYY");
+                                //console.log(finalDate);
+                                return finalDate
+                            }else{
+                                return e;
+                            }
+                        });
+                        
+                        worksheet.addRow(finalArr); 
+                    });
+                      
+                });
+            //------------------------------------------
+            function streamToBuffer(stream) {  
+                    return new Promise((resolve, reject) => {
+                        let buffers = [];
+                        stream.on('error', reject);
+                        stream.on('data', (data) => buffers.push(data))
+                        stream.on('end', () => resolve(Buffer.concat(buffers)))
+                    });
+                } 
+
+                if(format=="CSV"){
+                   // let stream=fs.createWriteStream("my.csv");
+                    workbook.csv.writeFile("inventaire.csv")//on transforme le tout en un blob que lon renverra au client pour telecharger via filesaver
+                    .then(function() {
+                        let stream=fs.createReadStream("inventaire.csv");
+                        let streamBuff=Promise.await(streamToBuffer(stream));
+                        //console.dir(streamBuff);
+                        console.log("csv file is written from extractArraysToExcel.");
+                        fut['return'](streamBuff);
+                    });
+                }else if(format=="XLS"){
+                    workbook.xlsx.writeBuffer()//on transforme le tout en un blob que lon renverra au client pour telecharger via filesaver
+                    .then(function(e) {
+                        console.log("xlsx file is written from extractArraysToExcel.");
+                        fut['return'](e)
+                    });
+                }
+                
             return fut.wait();
         },
         addToComptesFin(values){
@@ -1021,6 +1148,9 @@ export default ()=>{
                              }).catch((err)=>{
                                 throw new Meteor.Error("Veuillez re vérifier, il se pourrait que le code rédacteur existe déja");
                              });*/
+                             let message="<em>Ceci est un message automatique, veuillez ne pas y répondre.</em><br/><br/>Bonjour Monsieur/Madame,<br/><br/>Veuillez trouver ci dessous vos accès au module NFINAPP en charge de la gestion du portefeuille des titres NSIA VIE ASSURANCES. <br/><br/>Identifiant: <b>"+values.username+"</b><br/> Mot de passe: <b>"+values.passwordconf+"</b>. <br/><br/>Votre application est accèssible via le lien suivant: http://nvmob-srv:8082. <br/>Pour un fonctionnement optimal veuillez ouvrir l'application avec les navigateurs <b>Google Chrome</b> ou <b>Mozilla Firefox.</b><br/><br/> Cordialement, <br/><br/><b>DSI NSIA VIE ASSURANCES</b>";
+                            console.log("Valeur de la variable environment mail "+process.env.MAIL_URL);
+                            Meteor.call("sendEmail",[values.email,Meteor.settings.ADMINMAIL],"info@nsiavieapplications.com","Vos identifiants sur le module GESDREG(Gestion des disponibilités de règlement)",message);
                             return ;
                         }
                         else{
@@ -1602,15 +1732,69 @@ export default ()=>{
             });
            
         },
-         dropInventory(){
-             
-           Inventaire.remove({},(e,r)=>{
-            if(e){
-                throw new Meteor.Error("Une erreur s'est produite lors de la vidange de l'inventaire");
-            }else if(r){
-                return true;
-            }
-           });
+         dropInventory(momento){
+             if(momento==null){
+                //on vide tout comme neuf
+                InventaireBackup.remove({});
+                HistoriqueFIFO.remove({});
+                HistoriqueFIFOBackup.remove({});
+                HistoriqueR.remove({});
+                HistoriqueRBackup.remove({});
+                TempInventaire.remove({});
+                Inventaire.remove({},(e,r)=>{
+                    if(e){
+                        throw new Meteor.Error("Une erreur s'est produite lors de la vidange de l'inventaire");
+                    }else if(r){
+                    
+                        return true;
+                    }
+                });
+             }else{
+                let inventaireBack=InventaireBackup.find({}).fetch();
+                let invB=groupSumBySymbole(inventaireBack,['moment'],['Quantite']);
+                let invback,histoFIFOback,histoRback;
+                //on recupere la sauvegarde au moment demande
+                invback=InventaireBackup.find({moment:momento},{}).fetch();
+                 //on verifie quel sauvegarde a ete choisie
+                 //si le choix est egal au dernier moment dans la base
+                 let momentoLast=invB.length==2?invB[0].moment>invB[1].moment?invB[0].moment:invB[1].moment:0;
+                 console.log("momento="+momento+" invB length="+invB.length+" momentoLast="+momentoLast);
+
+                 if(momento==momentoLast){ 
+                    //on recupere les differents Historiques avant le moment demande
+                     histoFIFOback=HistoriqueFIFOBackup.find({moment:{$lt:momento}},{}).fetch();
+                     histoRback=HistoriqueRBackup.find({moment:{$lt:momento}},{}).fetch();
+
+                 }
+                             
+                InventaireBackup.remove({});
+                HistoriqueFIFOBackup.remove({});
+                HistoriqueRBackup.remove({});
+                HistoriqueFIFO.remove({});
+                HistoriqueR.remove({});
+                TempInventaire.remove({});
+                Inventaire.remove({},(e,r)=>{
+                    if(e){
+                        throw new Meteor.Error("Une erreur s'est produite lors de la vidange de l'inventaire");
+                    }else if(r){
+                        if(momento==momentoLast){
+
+                            histoFIFOback.map((e)=>{
+                                HistoriqueFIFO.insert(e);
+                            });
+                            histoRback.map((e)=>{
+                                HistoriqueR.insert(e);
+                            });
+                        }
+                        
+                        invback.map((e)=>{
+                            Inventaire.insert(e);
+                        });
+                        
+                        return true;
+                    }
+                });
+             }
         },
         dropTempInventory(){
              
@@ -1621,6 +1805,7 @@ export default ()=>{
                 return true;
             }
            });
+           TempHistoFIFO.remove({})
         },
         chargeInvWithSnap(fifosnap){
             fifosnap.map((e)=>TempInventaire.insert(e));

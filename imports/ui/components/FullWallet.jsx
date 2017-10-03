@@ -14,8 +14,12 @@ import CircularProgress from 'material-ui/CircularProgress';
 import {Table, TableBody, TableFooter, TableHeader, TableHeaderColumn, TableRow, TableRowColumn} from 'material-ui/Table';
 import {graphql} from 'react-apollo';
 import gql from 'graphql-tag';
+import {InventaireBackup} from '../../api/collections.js';
+import {RadioButton,RadioButtonGroup} from 'material-ui/RadioButton';
 import MenuItem from 'material-ui/MenuItem';
-import {miseajourDispo} from '../../redux/actions/user-actions.js'
+import {miseajourDispo} from '../../redux/actions/user-actions.js';
+import { createContainer } from 'meteor/react-meteor-data';
+import {arrAreSame,transformInFrenchDate,groupByLibel,groupSumBySymbole,convertInDateObjFromFrenchDate} from '../../utils/utils.js';
 import LinearProgress from 'material-ui/LinearProgress';
 
 import {$} from 'meteor/jquery';
@@ -31,6 +35,7 @@ class FullWallet extends Component{
                 errorMsg:'',
                 selectedRows:[],
                 regSelected:[],
+                exportFormat:"XLS",
                 table:{
                         fixedHeader:true,
                         fixedFooter:true,
@@ -92,11 +97,59 @@ class FullWallet extends Component{
                     label="VIDER"
                     primary={true}
                     onTouchTap={()=>{
-                        Meteor.call("dropInventory",(err,res)=>{
-                            this._dialogClose();
-                            alert('Inventaire vidé !!!');
-                            FlowRouter.go("dashboard");
-                        });
+                        let invB=typeof this.props.inventaireBack!="undefined"?groupSumBySymbole(this.props.inventaireBack,['moment'],['Quantite']):[];
+                        console.dir(invB);
+                        if(invB.length>=1){
+                            let choix=confirm("L'existence d'une sauvegarde de l'inventaire à une date antérieure a été trouvée.Voudriez vous restaurer l'inventaire ?");
+                            if(choix){
+                                let choix=null;
+                                if(invB.length>=2){
+                                    choix=prompt("Veuillez entrer 1 pour l'inventaire à la date du "+moment(invB[0].moment).format("LLLL:ss")+" et 2 pour l'inventaire à la date du "+moment(invB[1].moment).format("LLLL:ss"));
+                                    if(choix==1){
+                                        Meteor.call("dropInventory",invB[0].moment,(err,res)=>{
+                                            this._dialogClose();
+                                            alert('Inventaire Restauré !!!');
+                                            FlowRouter.go("dashboard");
+                                        });
+                                    }else if(choix==2){
+                                        Meteor.call("dropInventory",invB[1].moment,(err,res)=>{
+                                            this._dialogClose();
+                                            alert('Inventaire Restauré !!!');
+                                            FlowRouter.go("dashboard");
+                                        });
+                                    }
+                                }else{
+                                    choix=prompt("Veuillez entrer 1 pour l'inventaire à la date du "+moment(invB[0].moment).format("LLLL:ss")+".Veuillez quand même noter que cette opération remet les compteurs à zéro.");
+                                    if(choix==1){
+                                        Meteor.call("dropInventory",invB[0].moment,(err,res)=>{
+                                            this._dialogClose();
+                                            alert('Inventaire Restauré !!!');
+                                            FlowRouter.go("dashboard");
+                                        });
+                                    }
+                                }
+                                
+                            }else{
+                                let choix=confirm("Voudriez vous quand même supprimer l'inventaire et ses sauvegardes (remet tous les compteurs à zéro) ?");
+                                if(choix){
+                                    Meteor.call("dropInventory",null,(err,res)=>{
+                                        this._dialogClose();
+                                        alert('Inventaire Vidé !!!');
+                                        FlowRouter.go("dashboard");
+                                    });
+                                }
+                            }
+                        }else{
+                            let choix=confirm("Voudriez vous quand même supprimer l'inventaire et ses sauvegardes (remet tous les compteurs à zéro) ?");
+                            if(choix){
+                                Meteor.call("dropInventory",null,(err,res)=>{
+                                    this._dialogClose();
+                                    alert('Inventaire Vidé !!!');
+                                    FlowRouter.go("dashboard");
+                                });
+                            }
+                        }
+                        
                         
                     }}
                 />,
@@ -106,12 +159,12 @@ console.dir(this.props);
             return(
                 <div >
                 <Dialog
-                    title="ECRASER L'INVENTAIRE ?"
-                    actions={dialogActions}
-                    modal={false}
-                    open={this.state.dialogIsOpen}
-                    onRequestClose={this._dialogClose}
-                    >
+                title="ECRASER L'INVENTAIRE ?"
+                actions={dialogActions}
+                modal={false}
+                open={this.state.dialogIsOpen}
+                onRequestClose={this._dialogClose}
+                >
                         Vous êtes sur le point de vider cet inventaire.En êtes vous sur ?
                     </Dialog>
                     <Table
@@ -183,11 +236,62 @@ console.dir(this.props);
                         </TableBody>
                     </Table>
                      <div className="loadmoreDivSpaceAround">
+                         <RadioButtonGroup name="exportFormat" defaultSelected="XLS" onChange={(e,v)=>{
+                                this.setState({
+                                   exportFormat:v
+                                });
+                             }}>
+                             <RadioButton
+                                value="XLS"
+                                title="bon pour effectuer des analyses"
+                                label="format MS-Excel"
+                             />
+                             <RadioButton
+                                value="CSV"
+                                title="bon pour insertion d'un inventaire en cas de corruption des données"
+                                label="format CSV simple"
+                             />
+                         </RadioButtonGroup>
                         <RaisedButton 
-                            label="Exporter vers Excel" 
+                            label="Exporter vers..." 
                             labelColor="white"
                             backgroundColor="#cd9a2e"
-                            onClick={()=>loadMoreEntries()}
+                            onClick={()=>{ 
+                                Meteor.call("extractArraysToExcel",[inventaire],['Inventaire'],this.state.exportFormat,(err,res)=>{
+                                   if(res){
+                                      // console.dir(res);
+                                     
+                                        const blob=new Blob([res],{
+                                            type:'application/octet-stream'
+                                        });
+                                      if(this.state.exportFormat==="CSV"){
+                                        alert("Un fichier CSV contenant une sauvegarde de l'inventaire à la date du "+moment(res.date).format("DD/MM/YYYY")+" sera téléchargé automatiquement...");
+                                        const a=window.document.createElement('a');
+                                        a.href=window.URL.createObjectURL(blob,{
+                                            type:'data:attachment/csv'
+                                        });
+                                        a.download="INVENTAIRE_"+moment(res.date).format("DD/MM/YYYY")+".csv";
+                                        document.body.appendChild(a);
+                                        a.click();
+                                        document.body.removeChild(a);
+                                      }else if(this.state.exportFormat==="XLS"){
+                                        alert("Un fichier excel contenant une sauvegarde de l'inventaire à la date du "+moment(res.date).format("DD/MM/YYYY")+" pour analyse, sera téléchargé automatiquement...");
+                                        const a=window.document.createElement('a');
+                                        a.href=window.URL.createObjectURL(blob,{
+                                            type:'data:attachment/xlsx'
+                                        });
+                                        a.download="INVENTAIRE_"+moment(res.date).format("DD/MM/YYYY")+".xlsx";
+                                        document.body.appendChild(a);
+                                        a.click();
+                                        document.body.removeChild(a);
+                                      }
+                                    
+                                    
+                                   }else{
+                                       alert(err);
+                                   }
+                                })
+                            }}
                         />
                         <RaisedButton 
                             label="Vider l'inventaire" 
@@ -241,6 +345,15 @@ const getInventory=gql`
         
     }`;
 
+    FullWallet= createContainer(()=>{
+        const invhandle=Meteor.subscribe('inventaireTitreBack');
+        const loading=!invhandle.ready();
+        const invone=InventaireBackup.findOne({type:"ACTIONS"});
+        const invExist=!loading && !!invone;
+        return{
+            inventaireBack:invExist? InventaireBackup.find({},{sort:{DateAcquisition:1}}).fetch():[],
+        };
+        },FullWallet);
 
 export default graphql(getInventory,{
     options:({type,search}) => ({  

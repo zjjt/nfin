@@ -60,6 +60,42 @@ const resolvers={
                 return Inventaire.find({}).fetch();
             }*/
         },
+        inventaireBack(_,args){
+            if(args.type==="A" && (!args.search||args.search==="")){
+                InventaireBackup.remove({DateAcquisition:""});
+                return InventaireBackup.find({type:"ACTIONS",moment:parseInt(args.moment,10)},{sort:{DateAcquisition:1}}).fetch();
+            }else if(args.type==="A" && (args.search||args.search!=="")) {
+                InventaireBackup.remove({DateAcquisition:""});
+                return InventaireBackup.find({type:"ACTIONS",moment:parseInt(args.moment,10),Valeur:{$regex:args.search.toUpperCase()}},{sort:{DateAcquisition:1}}).fetch();
+            }else if(args.type==="O" && (!args.search||args.search==="")) {
+                InventaireBackup.remove({DateAcquisition:""});
+                return InventaireBackup.find({type:"OBLIGATIONS",moment:parseInt(args.moment,10)}).fetch();
+            }else if(args.type==="O" && (args.search||args.search!=="")) {
+                InventaireBackup.remove({DateAcquisition:""});
+                return InventaireBackup.find({type:"OBLIGATIONS",moment:parseInt(args.moment,10),Valeur:{$regex:args.search.toUpperCase()}},{sort:{DateAcquisition:1}}).fetch();
+            }else if(args.type==="ALL" && (!args.search||args.search==="")) {
+                console.log(parseInt(args.moment,10));
+                InventaireBackup.remove({DateAcquisition:""});
+                return InventaireBackup.find({moment:parseInt(args.moment,10)},{sort:{DateAcquisition:1}}).fetch();
+            }else if(args.type==="ALL" && (args.search||args.search!=="")) {
+                InventaireBackup.remove({DateAcquisition:""});
+                console.log(parseInt(args.moment,10));
+                return InventaireBackup.find({moment:parseInt(args.moment,10),Valeur:{$regex:args.search.toUpperCase()}},{sort:{DateAcquisition:1}}).fetch();
+            }
+            
+            /*if(args.type==="A" && (!args.search||args.search==="")){
+                //if on veut les actions
+                return Meteor.call('getInventory','A','',()=>{});
+            }else if(args.type==="O"&& (!args.search||args.search==="")){
+                //if on veut les obligations
+                return Inventaire.find({type:"OBLIGATIONS"}).fetch();
+            }else if((args.type==="A"||args.type==="O"||args.type==="ALL") && (args.search || args.search!=="")){
+                return Inventaire.find({Valeur:/args.search/});
+            }else if(args.type==="ALL" && (!args.search||args.search==="")){
+                console.log(typeof Inventaire);
+                return Inventaire.find({}).fetch();
+            }*/
+        },
         tempinventaire(_,args){
             if(args.type==="A" && (!args.search||args.search==="")){
                 TempInventaire.remove({DateAcquisition:""});

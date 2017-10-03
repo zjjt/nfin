@@ -82,7 +82,7 @@ import {$} from 'meteor/jquery';
        const {handleSubmit,pristine,submitting,dispatch,reset}=this.props;
 
        const submit=(values,dispatch)=>{
-           let numberRGX=/^[0-9]+$/;
+           let numberRGX=/^[+-]?\d+(\.\d+)?$/;
             if(values.valeur===''||!values.valeur){
                 this.setState({
                     error:true,
@@ -225,9 +225,7 @@ import {$} from 'meteor/jquery';
                         />
                         <Field 
                         name="taux" 
-                        type="number"
-                        min="1"
-                        max="100"
+                        type="text"
                         component={TextField}
                         hintText="Entrez taux de fractionnement désiré "
                         floatingLabelText="Taux de fractionnement"

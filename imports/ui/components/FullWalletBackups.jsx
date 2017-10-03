@@ -14,28 +14,28 @@ import CircularProgress from 'material-ui/CircularProgress';
 import {Table, TableBody, TableFooter, TableHeader, TableHeaderColumn, TableRow, TableRowColumn} from 'material-ui/Table';
 import {graphql} from 'react-apollo';
 import gql from 'graphql-tag';
+import {InventaireBackup} from '../../api/collections.js';
+import {RadioButton,RadioButtonGroup} from 'material-ui/RadioButton';
 import MenuItem from 'material-ui/MenuItem';
-import {miseajourDispo} from '../../redux/actions/user-actions.js'
+import {miseajourDispo} from '../../redux/actions/user-actions.js';
+import { createContainer } from 'meteor/react-meteor-data';
+import {arrAreSame,transformInFrenchDate,groupByLibel,groupSumBySymbole,convertInDateObjFromFrenchDate} from '../../utils/utils.js';
 import LinearProgress from 'material-ui/LinearProgress';
-import {Meteor} from 'meteor/meteor';
-import {TempInventaire} from '../../api/collections.js';
-import {createContainer} from 'meteor/react-meteor-data';
-import {formatNumberInMoney} from '../../utils/utils.js';
 
 import {$} from 'meteor/jquery';
 
 const ITEMS_PER_PAGE=10;
 
-class AfterComptaInv extends Component{
+class FullWalletBackups extends Component{
 
         constructor(){
             super();
             this.state={
                 dialogIsOpen:false,
                 errorMsg:'',
-                showFIFOSnap:false,
                 selectedRows:[],
                 regSelected:[],
+                exportFormat:"XLS",
                 table:{
                         fixedHeader:true,
                         fixedFooter:true,
@@ -46,7 +46,7 @@ class AfterComptaInv extends Component{
                         enableSelectAll:false,
                         deselectOnClickaway:false,
                         showCheckboxes:false,
-                        height:'500px'
+                        height:'450px'
                     }
             };
         }
@@ -84,8 +84,9 @@ class AfterComptaInv extends Component{
         }
         
         render(){
-            const {handleSubmit,pristine,submitting,dispatch,data,fifoSnap,inventaire,loadMoreEntries,loading}=this.props;
-           
+            const {handleSubmit,pristine,submitting,dispatch,data,inventaire,loadMoreEntries,loading}=this.props;
+           console.log("props are");
+           console.dir(this.props);
             let self=this;
                 const dialogActions = [
                 <FlatButton
@@ -97,27 +98,36 @@ class AfterComptaInv extends Component{
                     label="VIDER"
                     primary={true}
                     onTouchTap={()=>{
-                        Meteor.call("dropInventory",(err,res)=>{
-                            this._dialogClose();
-                            alert('Inventaire vidé !!!');
-                            FlowRouter.go("dashboard");
-                        });
+                        
+                        if(this.props.moment&&this.props.inventaireBack){
+                            let choix=confirm("Voulez vous vraiment supprimer cette sauvegarde de l'inventaire datant du "+moment(this.props.moment).format("LLLL:ss")+" ?");
+                            if(choix){
+                                Meteor.call("dropInventory",this.props.moment,(err,res)=>{
+                                            this._dialogClose();
+                                            alert('Sauvegarde éffacée');
+                                            FlowRouter.go("histodashboard");
+                                            
+                                        });
+                                
+                            }
+                        }
+                        
                         
                     }}
                 />,
                
                 ];
-console.dir(this.props);
+
             return(
                 <div >
                 <Dialog
-                    title="ECRASER L'INVENTAIRE ?"
-                    actions={dialogActions}
-                    modal={false}
-                    open={this.state.dialogIsOpen}
-                    onRequestClose={this._dialogClose}
-                    >
-                        Vous êtes sur le point de vider cet inventaire.En êtes vous sur ?
+                title="ECRASER L'INVENTAIRE SAUVEGARD&Eacute; ?"
+                actions={dialogActions}
+                modal={false}
+                open={this.state.dialogIsOpen}
+                onRequestClose={this._dialogClose}
+                >
+                        Vous êtes sur le point de vider cette sauvegarde de l'inventaire.En êtes vous sur ?
                     </Dialog>
                     <Table
                         height={this.state.table.height}
@@ -134,15 +144,16 @@ console.dir(this.props);
                             enableSelectAll={this.state.table.enableSelectAll}
                         >
                             <TableRow>
-                                <TableHeaderColumn tooltip="Ligne numero">N°</TableHeaderColumn>
+                                 <TableHeaderColumn tooltip="Ligne numero">N°</TableHeaderColumn>
                                 <TableHeaderColumn tooltip="Date d'acquisition">Acquis le</TableHeaderColumn>
-                                <TableHeaderColumn tooltip="Valeurs mobilières">Valeurs M.</TableHeaderColumn>
+                                <TableHeaderColumn tooltip="Valeurs mobilières">Valeurs mobilières</TableHeaderColumn>
                                 <TableHeaderColumn tooltip="Quantité">Quantité</TableHeaderColumn>
                                 <TableHeaderColumn tooltip="Nominal">Nominal</TableHeaderColumn>
                                 <TableHeaderColumn tooltip="VAL. Bilan">Valeur totale</TableHeaderColumn>
+                                <TableHeaderColumn tooltip="SGI">SGI</TableHeaderColumn>
                                 <TableHeaderColumn tooltip="Symbole">Symbole</TableHeaderColumn>
                                 <TableHeaderColumn tooltip="Référence">Référence</TableHeaderColumn>
-                               
+                                <TableHeaderColumn tooltip="Type de valeur">Type de valeur</TableHeaderColumn>
                               
                             </TableRow>
                         </TableHeader>
@@ -152,7 +163,6 @@ console.dir(this.props);
                             showRowHover={this.state.table.showRowHover}
                             stripedRows={this.state.table.stripedRows}
                         >
-                        
                         {
                             
                            (loading)?(
@@ -163,55 +173,23 @@ console.dir(this.props);
                                                     </div>
                                                </TableRowColumn>
                                             </TableRow>
-                                           ):this.state.showFIFOSnap?typeof fifoSnap!=='undefined'?fifoSnap.map((row,index)=>{
-                                            return(<TableRow key={index} className="animated bounceInLeft" selected={this.state.selectedRows.indexOf(index)!==-1} ref={`user${index}`}>
-                                               <TableRowColumn title="">{index+1}</TableRowColumn>
+                                           ):typeof this.props.inventaireBack!=='undefined'?this.props.inventaireBack.map((row,index)=>{
+                                            return(<TableRow key={index} className="animated bounceInRight" selected={this.state.selectedRows.indexOf(index)!==-1} ref={`user${index}`}>
+                                                <TableRowColumn title="">{index+1}</TableRowColumn>
                                                 <TableRowColumn title={moment(row.DateAcquisition).format("DD/MM/YYYY")}>{moment(row.DateAcquisition).format("DD/MM/YYYY")}</TableRowColumn>
                                                 <TableRowColumn title={row.Valeur}>{row.Valeur}</TableRowColumn>
                                                 <TableRowColumn title={row.Quantite}>{row.Quantite}</TableRowColumn>
-                                                <TableRowColumn title={formatNumberInMoney(row.PrixUnitaire)}>{formatNumberInMoney(row.PrixUnitaire)}</TableRowColumn>
-                                                <TableRowColumn title={formatNumberInMoney(row.ValBilan)}>{formatNumberInMoney(row.ValBilan)}</TableRowColumn>
+                                                <TableRowColumn title={row.PrixUnitaire}>{row.PrixUnitaire}</TableRowColumn>
+                                                <TableRowColumn title={row.ValBilan}>{row.ValBilan}</TableRowColumn>
+                                                <TableRowColumn title={row.SGI}>{row.SGI}</TableRowColumn>
                                                <TableRowColumn title={row.Symbole}>{row.Symbole}</TableRowColumn>
-                                               <TableRowColumn title={row.reference}>{row.reference}</TableRowColumn> 
+                                               <TableRowColumn title={row.reference}>{row.reference}</TableRowColumn>
+                                               <TableRowColumn title={row.type}>{row.type}</TableRowColumn>    
                                             </TableRow>);
                                         }):<TableRow>
                                                <TableRowColumn colSpan="14">
                                                     <div style={{textAlign:'center'}}>
-                                                Aucun élément dans linventaire<br/>veuillez re faire une integration    
-                                                    </div>
-                                               </TableRowColumn>
-                                            </TableRow>:typeof inventaire!=='undefined'?inventaire.map((row,index,arr)=>{
-                                                let classo="animated bounceInright ";
-                                                let classy="";
-                                                let val;
-                                                
-                                                   
-                                                        if(row.lastTypeOp==="AAC"){
-                                                            //On a affaire a un achat d'action on surligne avec une couleur verte
-                                                           classy="lightbluebak";
-                                                        }else if(row.lastTypeOp==="VACMV"){
-                                                            classy="orangebak"
-                                                        }else if(row.lastTypeOp==="VACPV"){
-                                                            classy="greenbak"
-                                                        }
-                                                         val=(<TableRow key={index} className={classo+classy} selected={this.state.selectedRows.indexOf(index)!==-1} ref={`user${index}`}>
-                                                                    <TableRowColumn title="">{index+1}</TableRowColumn>
-                                                                    <TableRowColumn title={moment(row.DateAcquisition).format("DD/MM/YYYY")}>{moment(row.DateAcquisition).format("DD/MM/YYYY")}</TableRowColumn>
-                                                                    <TableRowColumn title={row.Valeur}>{row.Valeur}</TableRowColumn>
-                                                                    <TableRowColumn title={row.Quantite}>{row.Quantite}</TableRowColumn>
-                                                                    <TableRowColumn title={row.PrixUnitaire}>{row.PrixUnitaire}</TableRowColumn>
-                                                                    <TableRowColumn title={row.ValBilan}>{row.ValBilan}</TableRowColumn>
-                                                                <TableRowColumn title={row.Symbole}>{row.Symbole}</TableRowColumn>
-                                                                <TableRowColumn title={row.reference}>{row.reference}</TableRowColumn> 
-                                                                </TableRow>);
-                                                   
-                                                    
-                                                
-                                                return val;
-                                        }):<TableRow>
-                                               <TableRowColumn colSpan="14">
-                                                    <div style={{textAlign:'center'}}>
-                                                Aucun élément dans linventaire<br/>veuillez re faire une integration    
+                                                Aucun élément dans l'inventaire<br/>veuillez choisir un inventaire à afficher    
                                                     </div>
                                                </TableRowColumn>
                                             </TableRow>
@@ -220,22 +198,76 @@ console.dir(this.props);
                         </TableBody>
                     </Table>
                      <div className="loadmoreDivSpaceAround">
+                         <RadioButtonGroup name="exportFormat" defaultSelected="XLS" onChange={(e,v)=>{
+                                this.setState({
+                                   exportFormat:v
+                                });
+                             }}>
+                             <RadioButton
+                                value="XLS"
+                                title="bon pour effectuer des analyses"
+                                label="format MS-Excel"
+                             />
+                             <RadioButton
+                                value="CSV"
+                                title="bon pour insertion d'un inventaire en cas de corruption des données"
+                                label="format CSV simple"
+                             />
+                         </RadioButtonGroup>
                         <RaisedButton 
-                            label="<<< Voir avant comptabilisation" 
+                            label="Exporter vers..." 
                             labelColor="white"
                             backgroundColor="#cd9a2e"
-                            onClick={()=>{this.setState({showFIFOSnap:true})}}
+                            onClick={()=>{ 
+                                Meteor.call("extractArraysToExcel",[inventaire],['Inventaire'],this.state.exportFormat,(err,res)=>{
+                                   if(res){
+                                      // console.dir(res);
+                                     
+                                        const blob=new Blob([res],{
+                                            type:'application/octet-stream'
+                                        });
+                                      if(this.state.exportFormat==="CSV"){
+                                        alert("Un fichier CSV contenant une sauvegarde de l'inventaire à la date du "+moment(res.date).format("DD/MM/YYYY")+" sera téléchargé automatiquement...");
+                                        const a=window.document.createElement('a');
+                                        a.href=window.URL.createObjectURL(blob,{
+                                            type:'data:attachment/csv'
+                                        });
+                                        a.download="INVENTAIRE_"+moment(res.date).format("DD/MM/YYYY")+".csv";
+                                        document.body.appendChild(a);
+                                        a.click();
+                                        document.body.removeChild(a);
+                                      }else if(this.state.exportFormat==="XLS"){
+                                        alert("Un fichier excel contenant une sauvegarde de l'inventaire à la date du "+moment(res.date).format("DD/MM/YYYY")+" pour analyse, sera téléchargé automatiquement...");
+                                        const a=window.document.createElement('a');
+                                        a.href=window.URL.createObjectURL(blob,{
+                                            type:'data:attachment/xlsx'
+                                        });
+                                        a.download="INVENTAIRE_"+moment(res.date).format("DD/MM/YYYY")+".xlsx";
+                                        document.body.appendChild(a);
+                                        a.click();
+                                        document.body.removeChild(a);
+                                      }
+                                    
+                                    
+                                   }else{
+                                       alert(err);
+                                   }
+                                })
+                            }}
                         />
                         <RaisedButton 
-                            label="Voir après comptabilisation >>>" 
+                            label="Vider l'inventaire" 
                             labelColor="white"
                             backgroundColor="#cd9a2e"
-                            onClick={()=>{this.setState({showFIFOSnap:false})}}
+                            onClick={this._dialogOpen.bind(this)}
                         />
                         {loading?"Chargement...":null}
                         
                     </div>
-                    
+                    <div className="helperDiv">
+                     Pour effectuer une recherche ,veuillez entrez la valeur mobilière recherchée.Elle sera retrouvée si elle existe dans la sauvegarde de l'inventaire que vous êtes en train de visualiser.
+                     <b>NB:LES RECHERCHES SONT EXECUTEES DYNAMIQUEMENT.</b>
+                     </div>
                 </div>
             );
         }
@@ -249,31 +281,18 @@ function mapDispatchToProps(dispatch){
         dispatch
     }
 }
-AfterComptaInv=connect(mapDispatchToProps)(AfterComptaInv);
+FullWalletBackups=connect(mapDispatchToProps)(FullWalletBackups);
 
-AfterComptaInv.propTypes={
+FullWalletBackups.propTypes={
         loading:PropTypes.bool,
        inventaire:PropTypes.array,
-       fifoSnap:PropTypes.array,
        type:PropTypes.string,
        search:PropTypes.string,
 };
 
-export default createContainer(()=>{
-    const invhandle=Meteor.subscribe('tempinventaireTitre');
-    const loading=!invhandle.ready();
-    const invone=TempInventaire.findOne({type:"ACTIONS"});
-    const invExist=!loading && !!invone;
-    return{
-        loading,
-        invone,
-        invExist,
-        inventaire:invExist? TempInventaire.find({},{sort:{DateAcquisition:1}}).fetch():[],
-    };
-},AfterComptaInv);
-/*const getInventory=gql`
-    query getInventory($type:String!){
-        inventaire(type:$type){
+const getInventory=gql`
+    query getInventoryBack($type:String!,$moment:String!,$search:String){
+        inventaireBack(type:$type,moment:$moment,search:$search){
             DateAcquisition
             Valeur
             Quantite
@@ -288,27 +307,30 @@ export default createContainer(()=>{
         
     }`;
 
+   
 
 export default graphql(getInventory,{
-    options:({type}) => ({  
+    options:({type,moment,search}) => ({  
         variables: {
             type,
+            moment,
+            search,
             offset:0,
             limit:ITEMS_PER_PAGE          
     },forceFetch:true }),
-        props:({data:{loading,inventaire,fetchMore}})=>{
+        props:({data:{loading,inventaireBack,fetchMore}})=>{
             return{
                 loading,
-                inventaire,
+                inventaireBack,
                 loadMoreEntries(){
                     return fetchMore({
                         variables:{
-                            offset:inventaire.length
+                            offset:inventaireBack.length
                         },
                         updateQuery:(previousResult,{fetchMoreResult})=>{
                             if(!fetchMoreResult.data){return previousResult;}
                             return Object.assign({},previousResult,{
-                                inventaire:[...previousResult.inventaire,...fetchMoreResult.data.inventaire],
+                                inventaire:[...previousResult.inventaireBack,...fetchMoreResult.data.inventaireBack],
                             });
                         }
                     });
@@ -316,4 +338,4 @@ export default graphql(getInventory,{
             }
         }
    
-})(AfterComptaInv);*/
+})(FullWalletBackups);

@@ -35,7 +35,13 @@ let transformInFrenchDate=(e)=>{
     let date=`${day}/${mois}/${year}`;
     return date;
 };
-
+let englishToFrenchDate=(e)=>{
+    let day=e.substring(0,2);
+    let mois=e.substring(3,5);
+    let year=e.substring(6);
+    let date=`${day}/${mois}/${year}`;
+    return date;
+};
 let convertInDateObjFromFrenchDate=(e)=>{
     let day=e.substring(0,2);
     let mois=e.substring(3,5);

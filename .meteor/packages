@@ -24,6 +24,7 @@ ostrio:files
 kadira:flow-router
 stolinski:stylus-multi
 check
+email@1.1.18
 meteortoys:allthings
 random
 momentjs:moment 
@@ -35,3 +36,4 @@ session
 modweb:baby-parse
 planettraining:jquery-ui-drag-resize
 meteorhacks:aggregate
+promise

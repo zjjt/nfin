@@ -17,9 +17,10 @@ import AdminUserList from '../../ui/containers/AdminUserList.jsx';
 import FormuFractionnement from '../../ui/containers/FormuFractionnement.jsx'
 import Wallet from '../../ui/containers/Wallet.jsx';
 import HistoFIFO from '../../ui/containers/HistoFIFO.jsx';
+import WalletBackups from '../../ui/containers/WalletBackups.jsx';
 import ComptesFin from '../../ui/containers/ComptesFin.jsx';
 import injectTapEventPlugin from 'react-tap-event-plugin';
-import {FichiersInv,Inventaire,ComptesFinanciers,IsTraiting} from '../../api/collections.js';
+import {FichiersInv,Inventaire,ComptesFinanciers,IsTraiting,InventaireBackup} from '../../api/collections.js';
 import {Session} from 'meteor/session';
 
 injectTapEventPlugin();
@@ -89,6 +90,25 @@ FlowRouter.route('/dashboard/historique/',{
 	}
 });
 
+FlowRouter.route('/dashboard/historique/sauvegarde-inventaire',{
+	name:'histoInv',
+	triggersEnter:[(context,redirect)=>{
+		let res=InventaireBackup.find().count();
+		if(!res){
+			if(!Meteor.user()){
+					redirect('/');
+				}else if(Meteor.user()){
+					alert("Aucune sauvegarde d'inventaire détecté !!!");
+					redirect('/dashboard/historique');
+				}
+		}
+	}],
+	action(){
+		mount(MainLayout,
+			{content:()=><WalletBackups/>})
+	}
+});
+
 FlowRouter.route('/dashboard/historique/FIFO/',{
 	name:'histoFIFO',
 	triggersEnter:[(context,redirect)=>{
@@ -121,6 +141,10 @@ FlowRouter.route('/dashboard/comptes-financiers-modification/',{
 				}else if(IsTraiting.find().count()){
 					alert("Un traitement est actuellement en cours veuillez patientez !!!");
 					redirect('/dashboard/');
+				}
+		}else{
+			if(!Meteor.user()){
+					redirect('/');
 				}
 		}
 	}],

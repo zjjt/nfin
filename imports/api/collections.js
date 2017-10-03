@@ -74,7 +74,9 @@ let IsTraiting=new Mongo.Collection('IsTraiting');
 let ComptesFinanciers=new Mongo.Collection('ComptesFinanciers');
 let SGI=new Mongo.Collection('SGI');
 let HistoriqueR=new Mongo.Collection('HistoriqueR');
+let HistoriqueRBackup=new Mongo.Collection('HistoriqueRBackup');
 let HistoriqueFIFO=new Mongo.Collection('HistoriqueFIFO');
+let HistoriqueFIFOBackup=new Mongo.Collection('HistoriqueFIFOBackup');
 let TempHistoFIFO=new Mongo.Collection('TempHistoFIFO');
 
-export {IsTraiting,TempInventaire,FichiersOP,FichiersInv,TempReleve,Inventaire,InventaireBackup,SGI,HistoriqueR,HistoriqueFIFO,TempHistoFIFO,ComptesFinanciers};
+export {IsTraiting,TempInventaire,FichiersOP,FichiersInv,TempReleve,Inventaire,InventaireBackup,SGI,HistoriqueR,HistoriqueFIFO,TempHistoFIFO,ComptesFinanciers,HistoriqueFIFOBackup,HistoriqueRBackup};

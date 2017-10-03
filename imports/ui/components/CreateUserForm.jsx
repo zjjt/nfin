@@ -94,6 +94,12 @@ import _ from 'lodash';
                 });
                 this._dialogOpen();
             }
+            else if(values.email===''||!values.email){
+                this.setState({
+                    errorMsg:"Le champs email ne peut être vide."
+                });
+                this._dialogOpen();
+            }
             else if(values.codeRedac===''||!values.codeRedac){
                 this.setState({
                     errorMsg:"Le champs code redacteur ne peut être vide."
@@ -198,6 +204,15 @@ import _ from 'lodash';
                     hintText="Confirmer le mot de passe du comptable"
                     floatingLabelText="Confirmation du mot de passe"
                     fullWidth={true}
+                    floatingLabelFixed={true}
+                />
+                <Field
+                    name="email" 
+                    component={TextField}
+                    hintText="Entrer l'email du gestionnaire"
+                    floatingLabelText="Email"
+                    fullWidth={true}
+                    type="mail"
                     floatingLabelFixed={true}
                 />
                  <Field

@@ -87,7 +87,6 @@ class HistoFIFO extends Component {
                                         name="valeur" 
                                         component={SelectField}
                                         floatingLabelText="Valeur mobilière dans l'inventaire"
-                                        hintText="Valeur mobilière"
                                         floatingLabelFixed={true}
                                         //validate={[required]}
                                         value={this.props.valeur}

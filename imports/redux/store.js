@@ -4,7 +4,7 @@ import thunk from 'redux-thunk';
 import {client,rootReducer} from './rootReducer';
 import {persistStore,autoRehydrate} from 'redux-persist';
 //import {moment} from 'meteor/momentjs:moment';
-//import frenchLocale from '../api/momentjsConfig';
+import frenchLocale from '../api/momentjsConfig';
 
 
 const middleware=[thunk,client.middleware()];
@@ -30,6 +30,6 @@ const store=createStore(rootReducer,compose(applyMiddleware(...middleware),devto
 
 //i18n chargement des middleware 
 
-//moment.locale('en',frenchLocale);//dispatch une action pour changer les langues et regler la locale
+moment.locale('en',frenchLocale);//dispatch une action pour changer les langues et regler la locale
 
 export default store;

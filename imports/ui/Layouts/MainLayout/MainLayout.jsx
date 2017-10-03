@@ -130,8 +130,8 @@ export default class MainLayout extends Component{
 									this.handleClose();
 								}}>Intégrer un fichier</MenuItem>
 							<hr/>
-							<MenuItem onTouchTap={()=>{FlowRouter.go('histo');
-							this.handleClose();}}>Historique des opérations comptabilisées</MenuItem>
+							<MenuItem onTouchTap={()=>{FlowRouter.go('histodashboard');
+							this.handleClose();}}>Historique des opérations et de l'inventaire</MenuItem>
 							<MenuItem style={{color:'white',backgroundColor:'#1f2d67'}}>Administration</MenuItem>
 							<MenuItem onTouchTap={()=>{FlowRouter.go('fracform');
 							this.handleClose();}}>Edition des taux de fractionnement</MenuItem>

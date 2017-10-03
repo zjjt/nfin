@@ -23,6 +23,7 @@ import {shouldExtractAgresso,toutEstValid} from '../../redux/actions/user-action
 import { createContainer } from 'meteor/react-meteor-data';
 import {groupByLibel} from '../../utils/utils.js'
 import AppBar from 'material-ui/AppBar';
+import {Inventaire} from '../../api/collections.js';
 import {Meteor} from 'meteor/meteor';
 let json2xls=require("json2xls");
 //let Excel=require('exceljs');
@@ -163,7 +164,7 @@ class AfterCompta extends Component {
                        }else if(this.state.dtitle==="Validez vous les résultats ?"){
                            this._dialogClose();
                            const{fifoSnap,releve}=this.props;
-                             Meteor.call("saveChanges",fifoSnap,releve,(res)=>{
+                             Meteor.call("saveChanges",fifoSnap,releve,(res,err)=>{
                                  
                                  if(res){
                                      console.dir(res);
@@ -183,6 +184,106 @@ class AfterCompta extends Component {
                                      alert("Sauvegarde effectuée...");
                                  }
                              });
+                             let choix=confirm("Voudriez vous extraire une copie de l'inventaire avant sa mise à jour ?");
+                             if(choix){
+                                
+                                 Meteor.call("extractArraysToExcel",[fifoSnap],['Inventaire précédent'],"CSV",(err,res)=>{
+                                   if(res){
+                                      // console.dir(res);
+                                     
+                                        const blob=new Blob([res],{
+                                            type:'application/octet-stream'
+                                        });  
+                                        alert("Un fichier CSV pour integration, contenant une sauvegarde de l'inventaire précédent à la date du "+moment(new Date()).format("DD/MM/YYYY")+" sera téléchargé automatiquement...");
+                                        const a=window.document.createElement('a');
+                                        a.href=window.URL.createObjectURL(blob,{
+                                            type:'data:attachment/csv'
+                                        });
+                                        a.download="ANCIEN_INVENTAIRE_"+moment(new Date()).format("DD/MM/YYYY")+".csv";
+                                        document.body.appendChild(a);
+                                        a.click();
+                                        document.body.removeChild(a);
+                                      
+                                    
+                                    
+                                   }else{
+                                       alert(err);
+                                   }
+                                });
+                                Meteor.call("extractArraysToExcel",[fifoSnap],['Inventaire précédent'],"XLS",(err,res)=>{
+                                   if(res){
+                                      // console.dir(res);
+                                     
+                                        const blob=new Blob([res],{
+                                            type:'application/octet-stream'
+                                        });  
+                                        alert("Un fichier excel contenant une sauvegarde de l'inventaire précédent à la date du "+moment(new Date()).format("DD/MM/YYYY")+" pour analyse, sera téléchargé automatiquement...");
+                                        const a=window.document.createElement('a');
+                                        a.href=window.URL.createObjectURL(blob,{
+                                            type:'data:attachment/xlsx'
+                                        });
+                                        a.download="ANCIEN_INVENTAIRE_"+moment(new Date()).format("DD/MM/YYYY")+".xlsx";
+                                        document.body.appendChild(a);
+                                        a.click();
+                                        document.body.removeChild(a);
+                                      
+                                    
+                                    
+                                   }else{
+                                       alert(err);
+                                   }
+                                });
+                                
+                             }
+                              choix=confirm("Voudriez vous extraire une copie de l'inventaire après sa mise à jour ?");
+                                if(choix){
+                                    Meteor.call("extractArraysToExcel",[this.props.inventaireFull],['Inventaire actuel'],"CSV",(err,res)=>{
+                                        if(res){
+                                            // console.dir(res);
+                                            
+                                                const blob=new Blob([res],{
+                                                    type:'application/octet-stream'
+                                                });  
+                                                alert("Un fichier CSV pour integration, contenant une sauvegarde de l'inventaire actualisé à la date du "+moment(new Date()).format("DD/MM/YYYY")+" sera téléchargé automatiquement...");
+                                                const a=window.document.createElement('a');
+                                                a.href=window.URL.createObjectURL(blob,{
+                                                    type:'data:attachment/csv'
+                                                });
+                                                a.download="INVENTAIRE_A_JOUR"+moment(new Date()).format("DD/MM/YYYY")+".csv";
+                                                document.body.appendChild(a);
+                                                a.click();
+                                                document.body.removeChild(a);
+                                            
+                                            
+                                            
+                                        }else{
+                                            alert(err);
+                                        }
+                                    });
+                                    Meteor.call("extractArraysToExcel",[this.props.inventaireFull],['Inventaire actuel'],"XLS",(err,res)=>{
+                                        if(res){
+                                            // console.dir(res);
+                                            
+                                                const blob=new Blob([res],{
+                                                    type:'application/octet-stream'
+                                                });  
+                                                alert("Un fichier excel contenant une sauvegarde de l'inventaire actualisé à la date du "+moment(new Date()).format("DD/MM/YYYY")+" pour analyse, sera téléchargé automatiquement...");
+                                                const a=window.document.createElement('a');
+                                                a.href=window.URL.createObjectURL(blob,{
+                                                    type:'data:attachment/xlsx'
+                                                });
+                                                a.download="INVENTAIRE_A_JOUR"+moment(new Date()).format("DD/MM/YYYY")+".xlsx";
+                                                document.body.appendChild(a);
+                                                a.click();
+                                                document.body.removeChild(a);
+                                            
+                                            
+                                            
+                                        }else{
+                                            alert(err);
+                                        }
+                                    });
+                                }
                              Meteor.call("exportToExcelAgresso",this.props.opCompta,(err,res)=>{
                                 if(res){
                                     alert("Votre fichier sera téléchargé automatiquement...");
@@ -322,9 +423,20 @@ AfterCompta=connect(
   }
 )(AfterCompta);
 
+export default createContainer(()=>{
+    const invhandle=Meteor.subscribe('inventaireTitre');
+    const loading=!invhandle.ready();
+    const invone=Inventaire.findOne({type:"ACTIONS"});
+    const invExist=!loading && !!invone;
+    return{
+        loading,
+        invone,
+        invExist,
+        inventaireFull:invExist? Inventaire.find({},{sort:{DateAcquisition:1}}).fetch():[],
+    };
+},AfterCompta);
 
 
-export default AfterCompta;
 
 const style={
     homeicon:{

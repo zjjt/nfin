@@ -7,5 +7,7 @@ import {Meteor} from 'meteor/meteor';
     Meteor.subscribe('tempFIFO');
   Meteor.subscribe('histoFIFO');
   Meteor.subscribe('histoR');
+  Meteor.subscribe('histoFIFOBack');
+  Meteor.subscribe('histoRBack');
    Meteor.subscribe('inventaireTitreBack');
    Meteor.subscribe('istraiting');
