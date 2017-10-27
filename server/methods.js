@@ -1740,6 +1740,7 @@ export default ()=>{
                 HistoriqueFIFOBackup.remove({});
                 HistoriqueR.remove({});
                 HistoriqueRBackup.remove({});
+                IsTraiting.remove({});
                 TempInventaire.remove({});
                 Inventaire.remove({},(e,r)=>{
                     if(e){
