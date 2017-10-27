@@ -46,8 +46,8 @@ let convertInDateObjFromFrenchDate=(e)=>{
     let day=e.substring(0,2);
     let mois=e.substring(3,5);
     let year=e.substring(6);
-    console.log(new Date(year,--mois,day));//il semblerait que l'on doit faire une decrementation sur le mois..
-    return new Date(year,mois,day);
+    //console.log(new Date(year,--mois,day));//il semblerait que l'on doit faire une decrementation sur le mois..
+    return new Date(parseInt(year,10),parseInt(--mois,10),parseInt(day,10));
 };
 let formatNumberInMoney=(x)=>{
     let parts=x.toString().split(".");

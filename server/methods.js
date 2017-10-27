@@ -557,7 +557,6 @@ export default ()=>{
             
         },
         cancelTraitement(){
-            TempInventaire.remove({});
             IsTraiting.remove({});
         },
         saveChanges(fifosnap,releve){
