@@ -1773,6 +1773,7 @@ export default ()=>{
                 HistoriqueRBackup.remove({});
                 HistoriqueFIFO.remove({});
                 HistoriqueR.remove({});
+                IsTraiting.remove({});
                 TempInventaire.remove({});
                 Inventaire.remove({},(e,r)=>{
                     if(e){
