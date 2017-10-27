@@ -271,6 +271,7 @@ const styles={
                     this.setState({
                         error:false
                     });
+                    Meteor.call("cancelTraitement");
                     FlowRouter.go('dashboard');
                 }
                 this._dialogClose();

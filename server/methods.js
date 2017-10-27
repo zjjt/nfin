@@ -556,6 +556,10 @@ export default ()=>{
             }
             
         },
+        cancelTraitement(){
+            TempInventaire.remove({});
+            IsTraiting.remove({});
+        },
         saveChanges(fifosnap,releve){
             //TODO sauvegarder le releve comptable
             let momentum=Date.now();
