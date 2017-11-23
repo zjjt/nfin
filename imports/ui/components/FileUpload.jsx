@@ -218,7 +218,7 @@ const styles={
                                arrSym.forEach((e)=>{
                                 let inv=R.filter(R.where({'Symbole':R.contains(e.symbole)}))(invArr);
                                 //alert("inv/"+JSON.stringify(inv));
-                                if(inv.length){
+                                if(typeof inv!="undefined"){
                                     if(e.qte>inv[0].Quantite){
                                     this.setState({
                                         error:true,
@@ -228,6 +228,15 @@ const styles={
                                     this._dialogOpen();
                                     return;
                                  }
+                                }else{
+                                    
+                                    this.setState({
+                                        error:true,
+                                        showLoader:false,
+                                        errorMsg:`Une erreur de traitenment est survenue.... veuillez actualiser la page attendre un moment et réessayer...`
+                                    });
+                                    this._dialogOpen();
+                                    dispatch(releverOk());
                                 }
                                  /*else{
                                     
