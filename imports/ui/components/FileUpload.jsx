@@ -233,10 +233,10 @@ const styles={
                                     this.setState({
                                         error:true,
                                         showLoader:false,
-                                        errorMsg:`Une erreur de traitenment est survenue.... veuillez actualiser la page attendre un moment et réessayer...`
+                                        errorMsg:`Une erreur de traitement est survenue.... veuillez actualiser la page attendre un moment et réessayer...`
                                     });
                                     this._dialogOpen();
-                                    dispatch(releverOk());
+                                   return;
                                 }
                                  /*else{
                                     
