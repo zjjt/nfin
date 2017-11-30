@@ -218,7 +218,7 @@ const styles={
                                arrSym.forEach((e)=>{
                                 let inv=R.filter(R.where({'Symbole':R.contains(e.symbole)}))(invArr);
                                 //alert("inv/"+JSON.stringify(inv));
-                                if(typeof inv!="undefined"){
+                                if(typeof inv!="undefined" || typeof inv[0]!="undefined"){
                                     if(e.qte>inv[0].Quantite){
                                     this.setState({
                                         error:true,
