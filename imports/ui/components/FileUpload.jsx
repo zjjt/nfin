@@ -217,17 +217,25 @@ const styles={
                            if(arrSym!=undefined && arrSym.length>0){ 
                                arrSym.forEach((e)=>{
                                 let inv=R.filter(R.where({'Symbole':R.contains(e.symbole)}))(invArr);
-                                //alert("inv/"+JSON.stringify(inv));
-                                if(typeof inv!="undefined" || typeof inv[0]!="undefined"){
+                               console.log("inv/"+JSON.stringify(inv));
+                                if(inv.length){
                                     if(e.qte>inv[0].Quantite){
-                                    this.setState({
-                                        error:true,
-                                        showLoader:false,
-                                        errorMsg:`Le relevé indique que l'opération de cession d'action ${inv[0].Valeur} a une quantité supérieure (${e.qte}) à celle présente dans le stock (${inv[0].Quantite}). Serait ce dû à un fractionnement non pris en compte ? Veuillez re-vérifier le relevé.`
-                                    });
-                                    this._dialogOpen();
-                                    return;
-                                 }
+                                        this.setState({
+                                            error:true,
+                                            showLoader:false,
+                                            errorMsg:`Le relevé indique que l'opération de cession d'action ${inv[0].Valeur} a une quantité supérieure (${e.qte}) à celle présente dans le stock (${inv[0].Quantite}). Serait ce dû à un fractionnement non pris en compte ? Veuillez re-vérifier le relevé.`
+                                        });
+                                        this._dialogOpen();
+                                        return;
+                                    }else{
+                                        this.setState({
+                                                    error:false,
+                                                    showLoader:true,
+                                                    errorMsg:`Veuillez patienter pendant que le processus comptabilisation s'exécute...`
+                                                });
+                                                this._dialogOpen();
+                                                dispatch(releverOk());
+                                    }
                                 }else{
                                     
                                     this.setState({
