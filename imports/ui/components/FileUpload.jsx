@@ -219,6 +219,7 @@ const styles={
                                arrSym.forEach((e)=>{
                                 let inv=R.filter(R.where({'Symbole':R.contains(e.symbole)}))(invArr);
                                console.log("inv/"+JSON.stringify(inv)+"arrSym Length: "+arrSym.length);
+                               console.log("ligne qte "+e.qte+" inv0"+inv[0].Quantite);
                                 if(inv.length && typeof inv[0]!="undefined"){
                                     if(e.qte>inv[0].Quantite){
                                         console.log("inv/"+JSON.stringify(inv));
@@ -230,6 +231,15 @@ const styles={
                                         this._dialogOpen();
                                        // alert(this.state.errorMsg);
                                         return;
+                                    }else{
+                                        
+                                        this.setState({
+                                            error:false,
+                                            showLoader:true,
+                                            errorMsg:`Veuillez patienter pendant que le processus comptabilisation s'exécute...`
+                                        });
+                                        this._dialogOpen();
+                                        dispatch(releverOk());
                                     }
                                 }
                                  /*else{

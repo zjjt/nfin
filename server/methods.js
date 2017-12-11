@@ -1151,9 +1151,9 @@ export default ()=>{
                              }).catch((err)=>{
                                 throw new Meteor.Error("Veuillez re vérifier, il se pourrait que le code rédacteur existe déja");
                              });*/
-                             let message="<em>Ceci est un message automatique, veuillez ne pas y répondre.</em><br/><br/>Bonjour Monsieur/Madame,<br/><br/>Veuillez trouver ci dessous vos accès au module NFINAPP en charge de la gestion du portefeuille des titres NSIA VIE ASSURANCES. <br/><br/>Identifiant: <b>"+values.username+"</b><br/> Mot de passe: <b>"+values.passwordconf+"</b>. <br/><br/>Votre application est accèssible via le lien suivant: http://nvmob-srv:8082. <br/>Pour un fonctionnement optimal veuillez ouvrir l'application avec les navigateurs <b>Google Chrome</b> ou <b>Mozilla Firefox.</b><br/><br/> Cordialement, <br/><br/><b>DSI NSIA VIE ASSURANCES</b>";
+                             let message="<em>Ceci est un message automatique, veuillez ne pas y répondre.</em><br/><br/>Bonjour Monsieur/Madame,<br/><br/>Veuillez trouver ci dessous vos accès au module NFINAPP en charge de la gestion du portefeuille des titres NSIA VIE ASSURANCES. <br/><br/>Identifiant: <b>"+values.username+"</b><br/> Mot de passe: <b>"+values.passwordconf+"</b>. <br/><br/>Votre application est accèssible via le lien suivant: http://10.11.100.48:8084. <br/>Pour un fonctionnement optimal veuillez ouvrir l'application avec les navigateurs <b>Google Chrome</b> ou <b>Mozilla Firefox.</b><br/><br/> Cordialement, <br/><br/><b>DSI NSIA VIE ASSURANCES</b>";
                             console.log("Valeur de la variable environment mail "+process.env.MAIL_URL);
-                            Meteor.call("sendEmail",[values.email,Meteor.settings.ADMINMAIL],"info@nsiavieapplications.com","Vos identifiants sur le module GESDREG(Gestion des disponibilités de règlement)",message);
+                            Meteor.call("sendEmail",[values.email,Meteor.settings.ADMINMAIL],"info@nsiavieapplications.com","Vos identifiants sur le module de gestion du portefeuille des valeurs mobilières NSIA FINANCES",message);
                             return ;
                         }
                         else{
@@ -1771,7 +1771,7 @@ export default ()=>{
                      histoRback=HistoriqueRBackup.find({moment:{$lt:momento}},{}).fetch();
 
                  }
-                dropTempInventory();         
+                Meteor.call("dropTempInventory");         
                 InventaireBackup.remove({});
                 HistoriqueFIFOBackup.remove({});
                 HistoriqueRBackup.remove({});
