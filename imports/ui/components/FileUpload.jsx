@@ -210,41 +210,27 @@ const styles={
                             }
                             arrSym=groupSumBySymbole(arrSym,["symbole"],["qte"]);
                             invArr=groupSumBySymbole(invArr,["Symbole"],["Quantite"]);
-                            
+                         4   
                             console.log(this.state.error);
                             //alert("arrSym/"+JSON.stringify(arrSym));
                             //alert("invArr/"+JSON.stringify(invArr));
                            if(arrSym!=undefined && arrSym.length>0){ 
+                               //on a affaire a une operation de vente
                                arrSym.forEach((e)=>{
                                 let inv=R.filter(R.where({'Symbole':R.contains(e.symbole)}))(invArr);
-                               console.log("inv/"+JSON.stringify(inv));
-                                if(inv.length){
+                               console.log("inv/"+JSON.stringify(inv)+"arrSym Length: "+arrSym.length);
+                                if(inv.length && typeof inv[0]!="undefined"){
                                     if(e.qte>inv[0].Quantite){
+                                        console.log("inv/"+JSON.stringify(inv));
                                         this.setState({
                                             error:true,
                                             showLoader:false,
                                             errorMsg:`Le relevé indique que l'opération de cession d'action ${inv[0].Valeur} a une quantité supérieure (${e.qte}) à celle présente dans le stock (${inv[0].Quantite}). Serait ce dû à un fractionnement non pris en compte ? Veuillez re-vérifier le relevé.`
                                         });
                                         this._dialogOpen();
+                                       // alert(this.state.errorMsg);
                                         return;
-                                    }else{
-                                        this.setState({
-                                                    error:false,
-                                                    showLoader:true,
-                                                    errorMsg:`Veuillez patienter pendant que le processus comptabilisation s'exécute...`
-                                                });
-                                                this._dialogOpen();
-                                                dispatch(releverOk());
                                     }
-                                }else{
-                                    
-                                    this.setState({
-                                        error:true,
-                                        showLoader:false,
-                                        errorMsg:`Une erreur de traitement est survenue.... veuillez actualiser la page attendre un moment et réessayer...`
-                                    });
-                                    this._dialogOpen();
-                                   return;
                                 }
                                  /*else{
                                     

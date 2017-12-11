@@ -1740,6 +1740,7 @@ export default ()=>{
                 //on vide tout comme neuf
                 InventaireBackup.remove({});
                 HistoriqueFIFO.remove({});
+                TempHistoFIFO.remove({});
                 HistoriqueFIFOBackup.remove({});
                 HistoriqueR.remove({});
                 HistoriqueRBackup.remove({});
@@ -1770,7 +1771,7 @@ export default ()=>{
                      histoRback=HistoriqueRBackup.find({moment:{$lt:momento}},{}).fetch();
 
                  }
-                             
+                dropTempInventory();         
                 InventaireBackup.remove({});
                 HistoriqueFIFOBackup.remove({});
                 HistoriqueRBackup.remove({});
