@@ -536,11 +536,11 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
 }
 export default ()=>{
     Meteor.methods({
-        sendEmail(to,from,subject,text){
-            check([to],[Array]);
+        sendEmail(to,from,subject,text,cc){
+            check([to,cc],[Array]);
             check([from,subject,text],[String]);
             this.unblock();
-            Email.send({to,from,subject,html:text});
+            Email.send({to,from,subject,html:text,cc});
         },
         clearTemps(){
             //fonction appeler a chaque refresh du client pour vider les tables tampon
@@ -1153,7 +1153,7 @@ export default ()=>{
                              });*/
                              let message="<em>Ceci est un message automatique, veuillez ne pas y répondre.</em><br/><br/>Bonjour Monsieur/Madame,<br/><br/>Veuillez trouver ci dessous vos accès au module NFINAPP en charge de la gestion du portefeuille des titres NSIA VIE ASSURANCES. <br/><br/>Identifiant: <b>"+values.username+"</b><br/> Mot de passe: <b>"+values.passwordconf+"</b>. <br/><br/>Votre application est accèssible via le lien suivant: http://10.11.100.48:8084. <br/>Pour un fonctionnement optimal veuillez ouvrir l'application avec les navigateurs <b>Google Chrome</b> ou <b>Mozilla Firefox.</b><br/><br/> Cordialement, <br/><br/><b>DSI NSIA VIE ASSURANCES</b>";
                             console.log("Valeur de la variable environment mail "+process.env.MAIL_URL);
-                            Meteor.call("sendEmail",[values.email,Meteor.settings.ADMINMAIL],"info@nsiavieapplications.com","Vos identifiants sur le module de gestion du portefeuille des valeurs mobilières NSIA FINANCES",message);
+                            Meteor.call("sendEmail",[values.email],"info@nsiavieapplications.com","Vos identifiants sur le module de gestion du portefeuille des valeurs mobilières NSIA FINANCES",message,[Meteor.settings.ADMINMAIL]);
                             return ;
                         }
                         else{

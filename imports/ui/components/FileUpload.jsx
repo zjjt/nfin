@@ -214,13 +214,14 @@ const styles={
                             console.log(this.state.error);
                             //alert("arrSym/"+JSON.stringify(arrSym));
                             //alert("invArr/"+JSON.stringify(invArr));
+                            let detected=false;
                            if(arrSym!=undefined && arrSym.length>0){ 
                                //on a affaire a une operation de vente
                                arrSym.forEach((e)=>{
                                 let inv=R.filter(R.where({'Symbole':R.contains(e.symbole)}))(invArr);
                                console.log("inv/"+JSON.stringify(inv)+"arrSym Length: "+arrSym.length);
                                console.log("ligne qte "+e.qte+" inv0"+inv[0].Quantite);
-                                if(inv.length && typeof inv[0]!="undefined"){
+                                if(inv.length && typeof inv[0]!="undefined" && !detected){
                                     if(e.qte>inv[0].Quantite){
                                         console.log("inv/"+JSON.stringify(inv));
                                         this.setState({
@@ -230,30 +231,21 @@ const styles={
                                         });
                                         this._dialogOpen();
                                        // alert(this.state.errorMsg);
-                                        return;
-                                    }else{
-                                        
-                                        this.setState({
-                                            error:false,
-                                            showLoader:true,
-                                            errorMsg:`Veuillez patienter pendant que le processus comptabilisation s'exécute...`
-                                        });
-                                        this._dialogOpen();
-                                        dispatch(releverOk());
+                                       detected=true;
+                                       
                                     }
                                 }
-                                 /*else{
-                                    
-                                    this.setState({
-                                        error:false,
-                                        showLoader:true,
-                                        errorMsg:`Veuillez patienter pendant que le processus comptabilisation s'exécute...`
-                                    });
-                                    this._dialogOpen();
-                                    dispatch(releverOk());
-                                }*/
-                                //alert(JSON.stringify(inv));
+                                 
                             });
+                            if(!detected){
+                                this.setState({
+                                    error:false,
+                                    showLoader:true,
+                                    errorMsg:`Veuillez patienter pendant que le processus comptabilisation s'exécute...`
+                                });
+                                this._dialogOpen();
+                                dispatch(releverOk());
+                            }
                         }else{
                             this.setState({
                                         error:false,
