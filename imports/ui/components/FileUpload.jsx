@@ -220,9 +220,10 @@ const styles={
                                arrSym.forEach((e)=>{
                                 let inv=R.filter(R.where({'Symbole':R.contains(e.symbole)}))(invArr);
                                console.log("inv/"+JSON.stringify(inv)+"arrSym Length: "+arrSym.length);
-                               console.log("ligne qte "+e.qte+" inv0"+inv[0].Quantite);
+                              // console.log("ligne qte "+e.qte+" inv0"+inv[0].Quantite);
                                 if(inv.length && typeof inv[0]!="undefined" && !detected){
                                     if(e.qte>inv[0].Quantite){
+                                        detected=true;
                                         console.log("inv/"+JSON.stringify(inv));
                                         this.setState({
                                             error:true,
@@ -230,8 +231,9 @@ const styles={
                                             errorMsg:`Le relevé indique que l'opération de cession d'action ${inv[0].Valeur} a une quantité supérieure (${e.qte}) à celle présente dans le stock (${inv[0].Quantite}). Serait ce dû à un fractionnement non pris en compte ? Veuillez re-vérifier le relevé.`
                                         });
                                         this._dialogOpen();
-                                       // alert(this.state.errorMsg);
-                                       detected=true;
+                                        return;
+                                        //alert(this.state.errorMsg);
+                                       
                                        
                                     }
                                 }
