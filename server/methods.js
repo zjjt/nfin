@@ -254,7 +254,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                         //console.dir(existInFIFO);
                                         TempInventaire.remove(existInFIFO,()=>{
                                             //on comptabilise la moins value et la sortie de stock(vente)
-                                            
+                                            console.log("il n'y a plus de stocks");
                                         });
                                          //comptabilisation moins value
                                             let compte=COMPTES.filter((obj)=>{
@@ -518,6 +518,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                                 type:'ACTIONS'
                                             });
                                             //on yield la valeur trouver
+                                            
                                              console.log("longueur du tableau avant "+tableauRes.length);
                                             tableauRes.push({temp,mvpv});
                                           tableauRes.forEach((e)=>pvmvTemp.push(e));
