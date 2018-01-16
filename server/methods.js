@@ -153,7 +153,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                         mvpv.compte=compte;
                                         mvpv.libelle="Moins value sur cession de "+libelleQteAfficher+" actions "+e.VALEUR;
                                         mvpv.libelleS="Moins value sur cession de "+libelleQteAfficher+" actions "+e.VALEUR;
-                                        mvpv.montant=montantMV;
+                                        mvpv.montant=Math.round(montantMV);
                                         mvpv.symbole=e.SYMBOLE;
                                         mvpv.ref=parseInt(e.REFERENCE);
                                         mvpv.ou="D";
@@ -170,7 +170,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                             prixVente:e.PRIX_UNITAIRE,
                                             prixAchat:existInFIFO.PrixUnitaire,
                                             ValBilan:0,
-                                            PMvalue:montantMV,
+                                            PMvalue:Math.round(montantMV),
                                             Symbole:e.SYMBOLE,
                                             ref:parseInt(e.REFERENCE),
                                             type:'ACTIONS'
@@ -213,7 +213,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                             mvpv.compte=compte;
                                             mvpv.libelle="Moins value sur cession de "+existInFIFO.Quantite+" actions "+e.VALEUR;
                                             mvpv.libelleS="Moins value sur cession de "+existInFIFO.Quantite+" actions "+e.VALEUR;
-                                            mvpv.montant=montantMV;
+                                            mvpv.montant=Math.round(montantMV);
                                             mvpv.symbole=e.SYMBOLE;
                                             mvpv.ref=parseInt(e.REFERENCE);
                                             mvpv.ou="D";
@@ -230,7 +230,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                                 prixVente:e.PRIX_UNITAIRE,
                                                 prixAchat:existInFIFO.PrixUnitaire,
                                                 ValBilan:0,
-                                                PMvalue:montantMV,
+                                                PMvalue:Math.round(montantMV),
                                                 Symbole:e.SYMBOLE,
                                                 ref:parseInt(e.REFERENCE),
                                                 type:'ACTIONS'
@@ -280,7 +280,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                             mvpv.compte=compte;
                                             mvpv.libelle="Moins value sur cession de "+existInFIFO.Quantite+" actions "+e.VALEUR;
                                             mvpv.libelleS="Moins value sur cession de "+existInFIFO.Quantite+" actions "+e.VALEUR;
-                                            mvpv.montant=montantMV;
+                                            mvpv.montant=Math.round(montantMV);
                                             mvpv.symbole=e.SYMBOLE;
                                             mvpv.ref=parseInt(e.REFERENCE);
                                             mvpv.ou="D";
@@ -297,7 +297,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                                 prixVente:e.PRIX_UNITAIRE,
                                                 prixAchat:existInFIFO.PrixUnitaire,
                                                 ValBilan:0,
-                                                PMvalue:montantMV,
+                                                PMvalue:Math.round(montantMV),
                                                 Symbole:e.SYMBOLE,
                                                 ref:parseInt(e.REFERENCE),
                                                 type:'ACTIONS'
@@ -371,7 +371,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                         mvpv.compte=compte;
                                         mvpv.libelle="Plus value sur cession de "+libelleQteAfficher+" actions "+e.VALEUR;
                                         mvpv.libelleS="Plus value sur cession de "+libelleQteAfficher+" actions "+e.VALEUR;
-                                        mvpv.montant=montantPV;
+                                        mvpv.montant=Math.round(montantPV);
                                         mvpv.symbole=e.SYMBOLE;
                                         mvpv.ref=parseInt(e.REFERENCE);
                                         mvpv.ou="C";
@@ -388,7 +388,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                                 prixVente:e.PRIX_UNITAIRE,
                                                 prixAchat:existInFIFO.PrixUnitaire,
                                                 ValBilan:0,
-                                                PMvalue:montantPV,
+                                                PMvalue:Math.round(montantPV),
                                                 Symbole:e.SYMBOLE,
                                                 ref:parseInt(e.REFERENCE),
                                                 type:'ACTIONS'
@@ -431,7 +431,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                             mvpv.compte=compte;
                                             mvpv.libelle="Plus value sur cession de "+existInFIFO.Quantite+" actions "+e.VALEUR;
                                             mvpv.libelleS="Plus value sur cession de "+existInFIFO.Quantite+" actions "+e.VALEUR;
-                                            mvpv.montant=montantPV;
+                                            mvpv.montant=Math.round(montantPV);
                                             mvpv.symbole=e.SYMBOLE;
                                             mvpv.ref=parseInt(e.REFERENCE);
                                             mvpv.ou="C";
@@ -448,7 +448,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                                 prixVente:e.PRIX_UNITAIRE,
                                                 prixAchat:existInFIFO.PrixUnitaire,
                                                 ValBilan:0,
-                                                PMvalue:montantPV,
+                                                PMvalue:Math.round(montantPV),
                                                 Symbole:e.SYMBOLE,
                                                 ref:parseInt(e.REFERENCE),
                                                 type:'ACTIONS'
@@ -495,7 +495,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                             mvpv.compte=compte;
                                             mvpv.libelle="Plus value sur cession de "+existInFIFO.Quantite+" actions "+e.VALEUR;
                                             mvpv.libelleS="Plus value sur cession de "+existInFIFO.Quantite+" actions "+e.VALEUR;
-                                            mvpv.montant=montantPV;
+                                            mvpv.montant=Math.round(montantPV);
                                             mvpv.symbole=e.SYMBOLE;
                                             mvpv.ref=parseInt(e.REFERENCE);
                                             mvpv.ou="C";
@@ -512,7 +512,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                                 prixVente:e.PRIX_UNITAIRE,
                                                 prixAchat:existInFIFO.PrixUnitaire,
                                                 ValBilan:0,
-                                                PMvalue:montantPV,
+                                                PMvalue:Math.round(montantPV),
                                                 Symbole:e.SYMBOLE,
                                                 ref:parseInt(e.REFERENCE),
                                                 type:'ACTIONS'
