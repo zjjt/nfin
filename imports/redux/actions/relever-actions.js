@@ -21,8 +21,17 @@ export function releverOk(){
 	return(dispatch,getState)=>{
 		//dispatch({type:COMPTABILISATION});
 		let rel=getState().releveDuJour.releverDuJour;
-		Meteor.call('comptabilisation',rel,(err,res)=>{
-			if(res){	
+		Meteor.apply('comptabilisation',[rel],
+		{
+			wait:true,
+			onResultReceived:(result)=>{
+				console.log("resultat de l'appel "+result);
+			},
+			throwStubExceptions:true
+		},(err,res)=>{
+			console.log(res)
+			if(res){
+				//alert(res);	
 				if(dispatch({type:START_COMPTA_PROCESS,resComptaFull:res})){
 					//alert(JSON.stringify(res));
 					if(res!=undefined){

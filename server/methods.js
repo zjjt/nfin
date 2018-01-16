@@ -518,7 +518,7 @@ function comptaMVPV(e,index,quantiteRestante,pvmvTemp,tableauRes){ //on renvoi u
                                                 type:'ACTIONS'
                                             });
                                             //on yield la valeur trouver
-                                            
+
                                              console.log("longueur du tableau avant "+tableauRes.length);
                                             tableauRes.push({temp,mvpv});
                                           tableauRes.forEach((e)=>pvmvTemp.push(e));
@@ -1390,8 +1390,10 @@ export default ()=>{
 //-----------------COMPTABILISATION METHOD------------------------------->
         comptabilisation(rel){
             //console.dir(COMPTES);
+            this.unblock();
             IsTraiting.insert({traitement:true});
             let COMPTES=ComptesFinanciers.find().fetch();
+            let fut=new Future();
             let invcontent=Inventaire.find({},{sort:{DateAcquisition:1}}).fetch();
             TempInventaire.remove({});
             invcontent.forEach((e)=>{
@@ -1566,7 +1568,7 @@ export default ()=>{
                     
                 });
                 console.log("====TempArr===========================================>");
-                    //console.dir(tempArrD);
+                    console.log("tempArrD.length"+tempArrD.length);
                     console.log("====fin tempArr===========================================>");
                 /*tempArr.sort((a,b)=>{
                     return a.ref-b.ref;
@@ -1575,6 +1577,7 @@ export default ()=>{
                 //---------GESTION DE LA PARTIE CREDIT---------------------------//
                 tempArrD.map((e)=>{
                     //pour l'Achat d'action on gere la bank ici
+                   // console.log(e.length);
                     if(e.typeOp==="AAC"||e.typeOp==="FRAAC"){
                             let compte=COMPTES.filter((obj)=>{
                                     return obj.type==="BANK"
@@ -1643,9 +1646,11 @@ export default ()=>{
                 });
            
                 console.log("====comptabilisation finale=====================================================>");
-                //console.dir(compta);
+               console.log("tempArrC.length "+tempArrC.length);
+                //console.log("comptalength:"+compta.length);
                 let refArray=[];
                 tempArrD.forEach((e)=>{
+                   // console.log("in foreach temparrD "+e.length);
                     if(refArray.indexOf(e)===-1){
                          refArray.push(e.ref);
                     }
@@ -1662,6 +1667,7 @@ export default ()=>{
                    // console.log(byRef[`${e}`]);
                     properOrder.push(byRef[`${e}`]);
                 });
+               // console.log(refArray.length);
                 //tableau dans le bon ordre est un tableau multidimensionnel donc une double for loop est requise pour le tableau final
                 for(let i=0;i<properOrder.length;i++){
                     let operation=properOrder[i];
@@ -1681,9 +1687,10 @@ export default ()=>{
 					})
 					
 				});
-                //console.dir(finaly);
-                return finaly;
+                console.log("finalyLength "+finaly.length);
+                fut['return'](finaly);
             }
+            return fut.wait();
         },
         mapInventory(){
             //let fut=new Future();
