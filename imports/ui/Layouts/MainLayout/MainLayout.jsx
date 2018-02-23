@@ -123,12 +123,14 @@ export default class MainLayout extends Component{
 							this.handleClose();}}>Inventaire total</MenuItem>
 							<MenuItem onTouchTap={()=>{FlowRouter.go('insertwallet');
 							this.handleClose();}}>Intégrer un fichier inventaire</MenuItem>
+							<MenuItem onTouchTap={()=>{FlowRouter.go('insertValeur');
+							this.handleClose();}}>Insérer un titre financier</MenuItem>
 							<hr/>
 							<MenuItem 
 								onTouchTap={()=>{
 									FlowRouter.go('upload');
 									this.handleClose();
-								}}>Intégrer un fichier</MenuItem>
+								}}>Intégrer un fichier relevé</MenuItem>
 							<hr/>
 							<MenuItem onTouchTap={()=>{FlowRouter.go('histodashboard');
 							this.handleClose();}}>Historique des opérations et de l'inventaire</MenuItem>

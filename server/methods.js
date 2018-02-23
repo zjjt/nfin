@@ -1498,6 +1498,24 @@ export default ()=>{
                         }
                         
                     }
+                    else if(codop.indexOf('O100')!==-1 && codop.substring(0,1)=="O"){
+                        console.log("Dividendes sur actions");
+                        let compte=COMPTES.filter((obj)=>{
+                            return obj.type==="BANK"
+                        });
+                        compte=compte[0];
+                        temp.compte=compte;
+                        temp.libelle=e.LIBELLE_OPERATION;
+                        temp.libelleS="Dividende sur actions "+e.VALEUR,
+                        temp.montant=e.MONTANT_TOTAL;
+                        temp.symbole=e.SYMBOLE;
+                        temp.ref=parseInt(e.REFERENCE,10);
+                        temp.ou="D";
+                        temp.qte=e.QUANTITE;
+                        temp.date=dateAchatFormatted;
+                        temp.typeOp="DIV";
+                        temp.indexOP=i;
+                    }
                     //Vente d'action
                     else if(codop.indexOf('T20')!==-1 && codop.substring(0,1)=="T"){
                         if(codop.indexOf('T200')!==-1 && codop.substring(0,1)=="T"){
@@ -1642,6 +1660,28 @@ export default ()=>{
                             };
                             tempArrC.push(bankobj);
                             
+                         }
+                         if(e.typeOp==="DIV"){
+                                console.log("Dividendes sur actions CRED");
+                                let compte=COMPTES.filter((obj)=>{
+                                    return obj.type==="DIV"
+                                });
+                                compte=compte[0];
+                                bankobj={
+                                    compte:compte,
+                                    libelle:e.libelle,
+                                    libelleS:e.libelleS,
+                                    montant:e.montant,
+                                    symbole:e.symbole,
+                                    ref:e.ref,
+                                    ou:'C',
+                                    qte:e.qte,
+                                    date:e.date,
+                                    typeOp:e.typeOp,
+                                    indexOp:e.indexOp,
+                                   
+                                };
+                                tempArrC.push(bankobj);
                          }
                 });
            
