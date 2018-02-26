@@ -24,7 +24,7 @@ if(areIntlLocalesSupported(['fr'])){
 }
 import {$} from 'meteor/jquery';
 
- class Formufrac extends Component{
+ class InsertVal extends Component{
     constructor(){
         super();
         this.state={
@@ -89,24 +89,24 @@ import {$} from 'meteor/jquery';
                     errorMsg:"Veuillez à sélectionner une valeur mobilière"
                 });
                 this._dialogOpen();
-            }else if(values.date_debut_frac===''||!values.date_debut_frac){
+            }else if(values.dateInsert===''||!values.dateInsert){
                this.setState({
                    error:true,
-                    errorMsg:"Veuillez à fournir une date de fractionnement"
+                    errorMsg:"Veuillez fournir une date d'acquisition de l'action"
                 });
                 this._dialogOpen(); 
             } 
-            else if(values.taux===''||!values.taux){
+            else if(values.Quantite===''||!values.Quantite){
                this.setState({
                    error:true,
-                    errorMsg:"Veuillez à fournir une taux de fractionnement"
+                    errorMsg:"Veuillez à fournir un nombre d'actions gratuites acquise"
                 });
                 this._dialogOpen(); 
             }
-            else if(!values.taux.match(numberRGX)){
+            else if(!values.Quantite.match(numberRGX)){
                this.setState({
                    error:true,
-                    errorMsg:"Veuillez à fournir une taux de fractionnement valide"
+                    errorMsg:"Veuillez à fournir une Quantité valide"
                 });
                 this._dialogOpen(); 
             }             
@@ -117,7 +117,9 @@ import {$} from 'meteor/jquery';
                    showTable:false
                });
 
-                Meteor.call('updateFraction',values,(err,res)=>{
+                Meteor.call('insertFreeAction',values,(err,res)=>{
+                    console.dir(err);
+                    console.dir(res);
                     if(err){
                         if(err.error==="notfound"){
                             this.setState({
@@ -129,17 +131,7 @@ import {$} from 'meteor/jquery';
                         this._dialogOpen();
                     }else if(res){
                         //alert(JSON.stringify(res.updatedInv));
-                        if(res.error){
-                            this.setState({
-                                fracArrOl:res.oldInv,
-                                fracArrNew:res.updatedInv,
-                                showTable:true,
-                                showLoader:false,
-                                error:true,
-                                errorMsg:res.message
-                            });
-                            this._dialogOpen();
-                        }else{
+                       {
                             reset();
                             this.setState({
                                 fracArrOl:res.oldInv,
@@ -161,7 +153,8 @@ import {$} from 'meteor/jquery';
 
         const maxLength = max => value =>(value && value.length > max)||(value && value.length < max) ? `ce champs doit être de ${max} caractères` : undefined;
         const maxLength3=maxLength(3);
-        const required = value => value ? undefined : 'Required';
+        const required = value => value ? undefined : 'Requis';
+        const number = value => value && isNaN(Number(value)) ?"Ce champs n'accepte que des nombres":undefined;
         const inventaire=groupSumBySymbole(Inventaire.find({},{sort:{Valeur:1}}).fetch(),['Symbole'],['Quantite']);
          const dialogActions = [
                 <FlatButton
@@ -198,24 +191,25 @@ import {$} from 'meteor/jquery';
                     hintText="Valeur mobilière"
                     floatingLabelFixed={true}
                     fullWidth={true}
-                    //validate={[required]}
+                    validate={[required]}
                     value={this.props.valeur}
                 >{
                    inventaire.map((e,i)=>{
-                       return(<MenuItem value={e.Symbole} key={i} primaryText={e.Valeur}/>);
+                       return(<MenuItem value={e.Valeur} key={i} primaryText={e.Valeur}/>);
                    }) 
                 }    
                 </Field>
                  <Field
-                            name="date_debut_frac" 
+                            name="dateInsert" 
                             DateTimeFormat={DateTimeFormat}
                             className="datepicker"
                             component={DatePicker}
-                            floatingLabelText="Date de début de la période de fractionnement"
+                            floatingLabelText="Date d'acquisition de l'action"
                             fullWidth={true}
                             okLabel="OK"
                             cancelLabel="Annuler"
                             locale="fr"
+                            validate={[ required ]}
                             format={(value,name)=>{
                                 console.log('value being passed ',value);
                                 console.log('is of type',typeof value);
@@ -224,18 +218,19 @@ import {$} from 'meteor/jquery';
                             floatingLabelFixed={true}
                         />
                         <Field 
-                        name="taux" 
+                        name="Quantite" 
                         type="text"
+                        validate={[ required,number ]}
                         component={TextField}
-                        hintText="Entrez taux de fractionnement désiré "
-                        floatingLabelText="Taux de fractionnement"
+                        hintText="Entrez le nombre d'actions acquises "
+                        floatingLabelText="Quantité d'actions "
                         fullWidth={true}
                         
                         />
 
                 <div className="inAppBtnDivMiddle" style={{}}>
                     <RaisedButton
-                        label="Fractionner" 
+                        label="Insérer" 
                         labelColor="white"
                         backgroundColor="#cd9a2e"
                         className="inAppBtnForm"
@@ -279,7 +274,7 @@ import {$} from 'meteor/jquery';
                             >
                                 {
                                     this.state.showNew? this.state.fracArrNew.length>0?this.state.fracArrNew.map((row,index)=>{
-                                            return(<TableRow key={index} className={row.Quantite!==this.state.fracArrOl[index].Quantite?"animated bounceInLeft yellowbak":"animated bounceInLeft"} selected={this.state.selectedRows.indexOf(index)!==-1} ref={`user${index}`}>
+                                            return(<TableRow key={index} className={row.reference==="GRATUIT"?"animated bounceInLeft yellowbak":"animated bounceInLeft"} selected={this.state.selectedRows.indexOf(index)!==-1} ref={`user${index}`}>
                                                <TableRowColumn title="">{index+1}</TableRowColumn>
                                                 <TableRowColumn title={moment(row.DateAcquisition).format("DD/MM/YYYY")}>{moment(row.DateAcquisition).format("DD/MM/YYYY")}</TableRowColumn>
                                                 <TableRowColumn title={row.Valeur}>{row.Valeur}</TableRowColumn>
@@ -311,21 +306,21 @@ import {$} from 'meteor/jquery';
                                 }
                             </TableBody>
                         </Table>
-                        :<p>Veuillez sélectionner la valeur mobilière à fractionner</p>
+                        :<p>Veuillez sélectionner la valeur mobilière à ajouter à l'inventaire</p>
                 }
                    
                 {
                     this.state.showTable?<div style={{display:"flex",flexDirection:"column",width:'100%'}}>
                     <div className="inAppBtnDivMiddle" style={{justifyContent:"space-between"}}>
                             <RaisedButton
-                                label="Avant Fractionnement" 
+                                label="Avant l'ajout" 
                                 labelColor="white"
                                 backgroundColor="#cd9a2e"
                                 className="inAppBtnForm"
                                 onClick={()=>{this.setState({showOld:true,showNew:false})}}
                             />
                             <RaisedButton
-                                label="Après Fractionnement" 
+                                label="Après l'ajout" 
                                 labelColor="white"
                                 backgroundColor="#cd9a2e"
                                 className="inAppBtnForm"
@@ -333,7 +328,7 @@ import {$} from 'meteor/jquery';
                             />
                         </div><hr/> <div className="inAppBtnDivMiddle" style={{justifyContent:"center"}}>
                             <RaisedButton
-                                label="Annuler le fractionnement" 
+                                label="Annuler l'ajout d'action" 
                                 labelColor="white"
                                 backgroundColor="#cd9a2e"
                                 className="inAppBtnForm"
@@ -343,10 +338,11 @@ import {$} from 'meteor/jquery';
                                     showTable:false
                                 });
                                 //meteor-all
-                                Meteor.call("cancelFrac",this.state.fracArrOl,(err,res)=>{
+                                Meteor.call("cancelFreeAction",this.state.fracArrOl,(err,res)=>{
                                     if(res){
                                        this.setState({
                                         error:false,
+                                        showLoader:false,
                                         errorMsg:res.message
                                     });
                                     this._dialogOpen(); 
@@ -364,23 +360,23 @@ import {$} from 'meteor/jquery';
    }
  }
 
- Formufrac=reduxForm({
-    form:'addFract',
+ InsertVal=reduxForm({
+    form:'addAction',
   //  fields:['nom','prenom','username','password','passwordconf','codeRedac','role']
-})(Formufrac);
+})(InsertVal);
 
-const selector = formValueSelector('addFract');
+const selector = formValueSelector('addAction');
 
-Formufrac = connect(
+InsertVal = connect(
   state => {
     // or together as a group
-    const { valeur, date_debut_frac,taux } = selector(state, 'valeur', 'date_debut_frac','taux')
+    const { valeur, dateInsert,Quantite } = selector(state, 'valeur', 'dateInsert','Quantite')
     return {
-      valeur,
-      date_debut_frac,
-      taux
+        valeur,
+        dateInsert,
+      Quantite
     }
   }
-)(Formufrac)
+)(InsertVal)
 
-export default Formufrac;
+export default InsertVal;

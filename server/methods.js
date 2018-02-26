@@ -1029,6 +1029,89 @@ export default ()=>{
                 return{message:"Fractionnement annulé"};
             }
         },
+        cancelFreeAction(inv){
+            if(typeof inv!==undefined){
+                inv.map((e)=>{
+                    Inventaire.update({
+                        DateAcquisition:e.DateAcquisition,
+                        Symbole:e.Symbole,
+                        reference:e.reference
+                    },{
+                        $set:{
+                            Quantite:e.Quantite,
+                            PrixUnitaire:e.PrixUnitaire,
+                            IsFractionned:false
+                        }
+                    });
+
+                });
+                Inventaire.remove({});
+                let e=Inventaire.find({}).fetch();
+                if(!e.length){
+                    inv.map((e)=>{
+                        Inventaire.insert({
+                            _id:e._id,
+                            DateAcquisition: e.DateAcquisition,
+                            Valeur: e.Valeur,
+                            Quantite: e.Quantite,
+                            PrixUnitaire: e.PrixUnitaire,
+                            ValBilan: e.ValBilan,
+                            SGI: e.SGI,
+                            Symbole: e.Symbole,
+                            reference: e.reference,
+                            lastTypeOp: e.lastTypeOp,
+                            IsFractionned: e.IsFractionned,
+                            type:e.type
+                        });
+    
+                    });
+                }
+                return{message:"ajout annulé"};
+            }
+        },
+         insertFreeAction(values){
+            console.log("inserting free action");
+            //let fut=new Future();
+            //console.dir(values);
+            if(values.valeur){
+                let e=Inventaire.findOne({Valeur:values.valeur});
+                let allActionsOld= Inventaire.find({}).fetch(); 
+                //console.dir(e);
+                if(e){
+                    Inventaire.insert({
+                        DateAcquisition:values.dateInsert,
+                        Valeur:values.valeur,
+                        Quantite:values.Quantite,
+                        PrixUnitaire:0,
+                        ValBilan:0,
+                        SGI:"NSIAFINANCE",
+                        Symbole:e.Symbole,
+                        reference:'GRATUIT',   
+                        lastTypeOp:'INVFILE',
+                        type:"ACTIONS"            
+                    });
+                    let allActionsNew=Inventaire.find({}).fetch();
+                        console.log(allActionsOld.length+"old");
+                        console.log(allActionsNew.length+"new");
+                    if(allActionsNew.length>0 && allActionsOld.length>0){
+                        console.log("in return");
+                        let obj={
+                            oldInv:allActionsOld,
+                            updatedInv:allActionsNew,
+                            error:false,
+                            message:"ajout effectué"
+                        };
+                        return obj;
+                    }
+                }else{
+                    throw new Meteor.Error("notfound","Une erreur est survenue lors de l'ajout de l'action");
+                }
+                
+            }else{
+                throw new Meteor.Error("notfound","Une erreur est survenue lors de l'ajout de l'action");
+            }
+            
+        },
         updateFraction(values){
             //on recupere les champs concernes pour effectuer le fractionnement
            

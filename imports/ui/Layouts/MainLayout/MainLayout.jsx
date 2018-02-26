@@ -123,8 +123,8 @@ export default class MainLayout extends Component{
 							this.handleClose();}}>Inventaire total</MenuItem>
 							<MenuItem onTouchTap={()=>{FlowRouter.go('insertwallet');
 							this.handleClose();}}>Intégrer un fichier inventaire</MenuItem>
-							<MenuItem onTouchTap={()=>{FlowRouter.go('insertValeur');
-							this.handleClose();}}>Insérer un titre financier</MenuItem>
+							<MenuItem onTouchTap={()=>{FlowRouter.go('insertfreeactionform');
+							this.handleClose();}}>Insérer une action gratuite</MenuItem>
 							<hr/>
 							<MenuItem 
 								onTouchTap={()=>{
@@ -147,7 +147,7 @@ export default class MainLayout extends Component{
 						{content()}
 						</section>
 						<footer>
-							NFINAPP v.0.1.0 &copy; Nsia Vie Assurances tous droits réservés. 
+							NFINAPP v.0.5.0 &copy; Nsia Vie Assurances tous droits réservés. 
 						</footer>
 					</div>
 				</MuiThemeProvider>	

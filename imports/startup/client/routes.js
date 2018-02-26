@@ -15,6 +15,7 @@ import AdminDashboard from '../../ui/containers/AdminDashboard.jsx';
 import CreateUser from '../../ui/containers/CreateUser.jsx';
 import AdminUserList from '../../ui/containers/AdminUserList.jsx';
 import FormuFractionnement from '../../ui/containers/FormuFractionnement.jsx'
+import InsertValeurMob from '../../ui/containers/InsertValeurMob.jsx'
 import Wallet from '../../ui/containers/Wallet.jsx';
 import HistoFIFO from '../../ui/containers/HistoFIFO.jsx';
 import WalletBackups from '../../ui/containers/WalletBackups.jsx';
@@ -47,6 +48,25 @@ FlowRouter.route('/dashboard',{
 	action(){
 		mount(MainLayout,
 			{content:()=><Dashboard/>})
+	}
+});
+
+FlowRouter.route('/dashboard/insertfreeaction/',{
+	name:'insertfreeactionform',
+	triggersEnter:[(context,redirect)=>{
+		let res=Inventaire.find().count();
+		if(!res){
+			if(!Meteor.user()){
+					redirect('/');
+				}else if(Meteor.user()){
+					alert("Aucun inventaire détecté !!!");
+					redirect('/dashboard/insert-wallet/');
+				}
+		}
+	}],
+	action(){
+		mount(MainLayout,
+			{content:()=><InsertValeurMob/>})
 	}
 });
 

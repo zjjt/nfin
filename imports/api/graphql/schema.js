@@ -18,7 +18,7 @@ const schema=`
         ValBilan:Float
         SGI:String
         Symbole:String
-        reference:Int
+        reference:String
         lastTypeOp:String
         IsFractionned:Boolean
         type:String

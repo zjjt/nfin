@@ -14,7 +14,7 @@ import ActionAspectRatio from 'material-ui/svg-icons/action/aspect-ratio';
 import Divider from 'material-ui/Divider';
 import {Tabs, Tab} from 'material-ui/Tabs';
 import FontIcon from 'material-ui/FontIcon';
-import Formufrac from '../components/Formufrac.jsx';
+import InsertVal from '../components/InsertVal.jsx';
 import {moment} from 'meteor/momentjs:moment';
 import { createContainer } from 'meteor/react-meteor-data';
 import AppBar from 'material-ui/AppBar';
@@ -43,7 +43,7 @@ class InsertValeurMob extends Component {
                             textAlign:'center'
                         }}
                     />
-                    <Formufrac/>
+                    <InsertVal/>
                 </div>
            </div>)
     }
