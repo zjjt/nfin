@@ -1,4 +1,5 @@
 import {Meteor} from 'meteor/meteor';
+import { HTTP } from 'meteor/http';
 import {Accounts} from 'meteor/accounts-base';
 import Sequelize from 'sequelize';
 import {DBSQLITE,DBSQLSERVER} from '../imports/api/graphql/connectors.js';
@@ -541,7 +542,32 @@ export default ()=>{
             check([to,cc],[Array]);
             check([from,subject,text],[String]);
             this.unblock();
-            Email.send({to,from,subject,html:text,cc});
+           /* try{
+                Email.send({to,from,subject,html:text,cc});
+            }catch(e){
+                console.log(e);
+            }*/
+            try {
+                 HTTP.call('POST', 'http://192.168.99.1:8025/v1/send', {
+                    data: { 
+                        from:from,
+                        to:to,
+                        cc:cc,
+                        subject:subject,
+                        html:text
+                    }
+                  }, (error, result) => {
+                    if (!error) {
+                      console.log("mail sent via hectane");
+                    }
+                  });
+          
+                return true;
+              } catch (e) {
+                // Got a network error, timeout, or HTTP error in the 400 or 500 range.
+                return false;
+              }
+            
         },
         clearTemps(){
             //fonction appeler a chaque refresh du client pour vider les tables tampon
@@ -1599,6 +1625,29 @@ export default ()=>{
                         temp.typeOp="DIV";
                         temp.indexOP=i;
                     }
+                    //frais de gestion
+                    else if((codop.indexOf('FT10')!==-1||codop.indexOf('FT12')!==-1||codop.indexOf('FT14')!==-1||codop.indexOf('FC10')!==-1) && codop.substring(0,1)=="F"){
+                        console.log("frais de gestion");
+                        let compte=COMPTES.filter((obj)=>{
+                                return obj.type==="FRG"
+                            });
+                            let lib=codop.indexOf('FT10')!==-1?"Droit de garde":codop.indexOf('FT12')!==-1?"Commissions / Lignes":codop.indexOf('FT14')!==-1?"Mandat de gestion":"Commissions diverses";
+                            compte=compte[0];
+                            temp.compte=compte;
+                            temp.libelle=e.LIBELLE_OPERATION;
+                            temp.libelleS=lib+" sur "+e.QUANTITE+" actions "+e.VALEUR,
+                            temp.montant=e.MONTANT_TOTAL;
+                            temp.symbole=e.SYMBOLE;
+                            temp.ref=parseInt(e.REFERENCE,10);
+                            temp.ou="D";
+                            temp.qte=e.QUANTITE;
+                            temp.date=dateAchatFormatted;
+                            temp.typeOp="FRG";
+                            temp.indexOP=i;
+                            
+                     
+                        
+                    }
                     //Vente d'action
                     else if(codop.indexOf('T20')!==-1 && codop.substring(0,1)=="T"){
                         if(codop.indexOf('T200')!==-1 && codop.substring(0,1)=="T"){
@@ -1679,7 +1728,7 @@ export default ()=>{
                 tempArrD.map((e)=>{
                     //pour l'Achat d'action on gere la bank ici
                    // console.log(e.length);
-                    if(e.typeOp==="AAC"||e.typeOp==="FRAAC"){
+                    if(e.typeOp==="AAC"||e.typeOp==="FRAAC"||e.typeOp==="FRG"){
                             let compte=COMPTES.filter((obj)=>{
                                     return obj.type==="BANK"
                                 });
@@ -1969,9 +2018,9 @@ export default ()=>{
         },
         defaultComptesFin(){//A completer
             let comptes={
-                abrev:['OOIC','OIFC','AOC','CLOTOCBRVM','CLOT','AC','CLOTONC','CLOT2','OEC','CLOTVENC','AEC','VETANC','OOINC','OIFNC','AONC','ANC','ONC','BANK','FR','MV','PV','DIV'],
-                libelles:['Obligations des organismes internationaux côtées','Obligations des institutions financières côtées','Autres obligations côtées','CLOTURE (obligation côtée BRVM)','CLOTURE (a identifier)','Actions côtées','CLOTURE (obligation non côtée)','CLOTURE (a identifier)','Obligations étrangères côtées','CLOTURE (valeur étrangère non côtée)','Actions étrangères côtées',"Valeurs d'etat non côtées",'Obligations des organismes internationaux non côtées','Obligations des institutions financières non côtées','Autres obligations non côtées','Actions non côtées','Obligations non côtées','Banque','Frais','Moins value','Plus Value','Dividendes'],
-                compte:[232000,232100,232200,232300,232500,233000,233300,233500,236000,236500,237000,238100,238200,238300,238400,238500,238600,562115,675000,840000,845000,773500]
+                abrev:['OOIC','OIFC','AOC','CLOTOCBRVM','CLOT','AC','CLOTONC','CLOT2','OEC','CLOTVENC','AEC','VETANC','OOINC','OIFNC','AONC','ANC','ONC','BANK','FR','FRG','MV','PV','DIV'],
+                libelles:['Obligations des organismes internationaux côtées','Obligations des institutions financières côtées','Autres obligations côtées','CLOTURE (obligation côtée BRVM)','CLOTURE (a identifier)','Actions côtées','CLOTURE (obligation non côtée)','CLOTURE (a identifier)','Obligations étrangères côtées','CLOTURE (valeur étrangère non côtée)','Actions étrangères côtées',"Valeurs d'etat non côtées",'Obligations des organismes internationaux non côtées','Obligations des institutions financières non côtées','Autres obligations non côtées','Actions non côtées','Obligations non côtées','Banque','Frais','Frais de Gestion','Moins value','Plus Value','Dividendes'],
+                compte:[232000,232100,232200,232300,232500,233000,233300,233500,236000,236500,237000,238100,238200,238300,238400,238500,238600,562115,675000,674000,840000,845000,773500]
             };
             comptes.compte.forEach((e,index)=>{
                  ComptesFinanciers.upsert({
